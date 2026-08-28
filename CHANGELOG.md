@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026.8.28](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.0...v2026.8.28) (2026-08-28)
+
+
+### Features
+
+* **ac:** expose model 220F4047 smart light sensing, wind-toward-person, wind-avoid-person, and sleep-manager state as read-only entities
+* **ac:** add an opt-in SN8 wind-avoid diagnostic entity for controlled real-device comparison
+
+
+### Bug Fixes
+
+* **binary_sensor:** apply model and default-entity filtering consistently with sensors
+* **dependency:** pin the tested midea-lan 2026.8.28 compatibility commit
+
 ## [2026.8.0](https://github.com/wuwentao/midea_ac_lan/compare/v0.7.1...v2026.8.0) (2026-08-12)
 
 

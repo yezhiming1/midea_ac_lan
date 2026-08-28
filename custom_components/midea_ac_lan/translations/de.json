@@ -255,6 +255,21 @@
       "electronic_smell": {
         "name": "Desodorieren und Sterilisieren"
       },
+      "light_sensitive": {
+        "name": "Smart Light Sensing"
+      },
+      "sleep_manager": {
+        "name": "Sleep Manager"
+      },
+      "wind_avoid_person": {
+        "name": "Wind Avoid Person"
+      },
+      "wind_avoid_person_sn8": {
+        "name": "Wind Avoid Person (SN8 diagnostic)"
+      },
+      "wind_toward_person": {
+        "name": "Wind Toward Person"
+      },
       "water_pump_running": {
         "name": "Wasserpumpe läuft"
       }

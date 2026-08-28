@@ -1,6 +1,6 @@
 """Binary sensor for Midea Lan."""
 
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,7 +11,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_SENSORS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES, DOMAIN
+from .const import DEVICES, DOMAIN, supports_model
 from .midea_devices import MIDEA_DEVICES
 from .midea_entity import MideaEntity
 
@@ -30,7 +30,11 @@ async def async_setup_entry(
         "dict",
         MIDEA_DEVICES[device.device_type]["entities"],
     ).items():
-        if config["type"] != Platform.BINARY_SENSOR or entity_key not in extra_sensors:
+        if (
+            config["type"] != Platform.BINARY_SENSOR
+            or not supports_model(device.model, config)
+            or (not config.get("default") and entity_key not in extra_sensors)
+        ):
             continue
         required_attribute = config.get("required_attribute")
         if (
@@ -51,6 +55,14 @@ class MideaBinarySensor(MideaEntity, BinarySensorEntity):
         return cast("BinarySensorDeviceClass", self._config.get("device_class"))
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Whether the binary sensor is on."""
-        return cast("bool", self._device.get_attribute(self._entity_key))
+        value = self._device.get_attribute(self._entity_key)
+        return None if value is None else bool(value)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose the protocol value when an entity needs diagnostic context."""
+        if not self._config.get("raw_value"):
+            return None
+        return {"raw_value": self._device.get_attribute(self._entity_key)}

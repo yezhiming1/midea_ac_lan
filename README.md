@@ -1,12 +1,15 @@
 # Midea AC LAN
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
-[![Stable](https://img.shields.io/github/v/release/wuwentao/midea_ac_lan)](https://github.com/wuwentao/midea_ac_lan/releases/latest)
-[![Super-Linter](https://github.com/wuwentao/midea_ac_lan/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Stable](https://img.shields.io/github/v/release/yezhiming1/midea_ac_lan)](https://github.com/yezhiming1/midea_ac_lan/releases/latest)
+[![Super-Linter](https://github.com/yezhiming1/midea_ac_lan/actions/workflows/linter.yml/badge.svg)](https://github.com/yezhiming1/midea_ac_lan/actions/workflows/linter.yml)
 
 English | [简体中文](README_hans.md) | [Discord Chat](https://discord.com/invite/ZWdd2fXndn) | [QQ Group](https://qm.qq.com/q/l53SGEwlZ6)
 
 Control your Midea M-Smart appliances via local area network.
+
+> This compatibility fork tracks the upstream project and adds read-only support for
+> Wahin model `220F4047`. It intentionally does not add setters for the probed features.
 
 - Automated device discover and configuration based Home Assistant config flow UI.
 - Extra sensors and switches.
@@ -91,7 +94,8 @@ please check your device documents and supported feature in below table links.
 > [!IMPORTANT]
 > Make sure you have installed HACS in Home Assistant using the [HACS install guide](https://hacs.xyz/docs/use/download/download/)
 
-[![Open your Home Assistant instance and open "midea_ac_lan" inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wuwentao&repository=midea_ac_lan)
+Add `https://github.com/yezhiming1/midea_ac_lan` as a HACS custom repository with
+category `Integration`, then install the latest release.
 
 **Restart Home Assistant**.
 
@@ -100,12 +104,12 @@ please check your device documents and supported feature in below table links.
 > run this script in HA Terminal or SSH add-on
 
 ```shell
-wget -O - https://github.com/wuwentao/midea_ac_lan/raw/main/scripts/install.sh | ARCHIVE_TAG=latest bash -
+wget -O - https://github.com/yezhiming1/midea_ac_lan/raw/main/scripts/install.sh | ARCHIVE_TAG=latest bash -
 ```
 
 ### Option 3: Manual Install
 
-1. Download `midea_ac_lan.zip` from [Latest Release](https://github.com/wuwentao/midea_ac_lan/releases/latest)
+1. Download `midea_ac_lan.zip` from [Latest Release](https://github.com/yezhiming1/midea_ac_lan/releases/latest)
 2. copy `midea_ac_lan.zip` to `/custom_components/midea_ac_lan` in Home Assistant.
 3. **Restart Home Assistant**.
 
@@ -197,7 +201,7 @@ please refer to [Debug and Test](doc/debug.md)
 Development uses [uv](https://docs.astral.sh/uv/) (no Docker required). Install uv, then:
 
 ```shell
-git clone https://github.com/wuwentao/midea_ac_lan.git
+git clone https://github.com/yezhiming1/midea_ac_lan.git
 cd midea_ac_lan
 ./scripts/setup.sh
 ```

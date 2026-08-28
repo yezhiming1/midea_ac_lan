@@ -2,20 +2,19 @@
   "domain": "midea_ac_lan",
   "name": "Midea AC LAN",
   "codeowners": [
-    "@wuwentao",
-    "@caibinqing"
+    "@yezhiming1"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/wuwentao/midea_ac_lan#readme",
+  "documentation": "https://github.com/yezhiming1/midea_ac_lan#readme",
   "integration_type": "device",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/wuwentao/midea_ac_lan/issues",
+  "issue_tracker": "https://github.com/yezhiming1/midea_ac_lan/issues",
   "loggers": [
     "midealan"
   ],
   "requirements": [
-    "midea-lan==2026.8.0"
+    "midea-lan@git+https://github.com/yezhiming1/midea-lan.git@8cb221345db81a898b79de477ce8e8de724afe3c"
   ],
-  "version": "2026.8.0"
+  "version": "2026.8.28"
 }
