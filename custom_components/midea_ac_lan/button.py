@@ -33,7 +33,7 @@ async def async_setup_entry(
     ).items():
         if (
             config["type"] == Platform.BUTTON
-            and supports_model(device.model, config)
+            and supports_model(device.model, config, device.subtype)
             and (config.get("default") or entity_key in extra_switches)
         ):
             buttons.append(MideaButton(device, entity_key))

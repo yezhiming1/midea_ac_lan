@@ -14,7 +14,14 @@
     "midealan"
   ],
   "requirements": [
-    "midea-lan@git+https://github.com/yezhiming1/midea-lan.git@8cb221345db81a898b79de477ce8e8de724afe3c"
+    "aiofiles",
+    "aiohttp",
+    "colorlog",
+    "defusedxml",
+    "ifaddr",
+    "pycryptodome",
+    "platformdirs",
+    "typing_extensions>=4.5.0"
   ],
-  "version": "2026.8.28"
+  "version": "2026.8.29"
 }

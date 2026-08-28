@@ -32,7 +32,7 @@ async def async_setup_entry(
     ).items():
         if (
             config["type"] != Platform.BINARY_SENSOR
-            or not supports_model(device.model, config)
+            or not supports_model(device.model, config, device.subtype)
             or (not config.get("default") and entity_key not in extra_sensors)
         ):
             continue

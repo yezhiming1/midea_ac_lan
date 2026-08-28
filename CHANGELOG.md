@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026.8.29](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.28...v2026.8.29) (2026-08-28)
+
+
+### Features
+
+* **ac:** add a mutually exclusive off/toward/avoid person-airflow selector for model 220F4047 subtype 8
+* **ac:** restore the selected person-airflow preference after the air conditioner powers on
+* **ac:** add smart-light control backed by the device's reported light-sensitive value
+* **registry:** reversibly disable unselected or unsupported optional entities without deleting them
+
+
+### Bug Fixes
+
+* **dependency:** bundle the verified midea-lan 2026.8.29 wheel so Home Assistant startup does not depend on a Git fetch
+
 ## [2026.8.28](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.0...v2026.8.28) (2026-08-28)
 
 

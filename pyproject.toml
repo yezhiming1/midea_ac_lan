@@ -7,10 +7,19 @@ description = "Control your Midea M-Smart appliances via local area network in H
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = { text = "MIT" }
-# Runtime dependency, mirrors custom_components/midea_ac_lan/manifest.json so that
-# `import midealan` works inside the dev virtualenv.
+# The integration prepends its verified pure-Python wheel from
+# custom_components/midea_ac_lan/_vendor before importing midealan. These are
+# the wheel's runtime dependencies; midea-lan itself is deliberately absent so
+# Home Assistant and local tooling never fetch its source from Git at startup.
 dependencies = [
-  "midea-lan @ git+https://github.com/yezhiming1/midea-lan.git@8cb221345db81a898b79de477ce8e8de724afe3c",
+  "aiofiles",
+  "aiohttp",
+  "colorlog",
+  "defusedxml",
+  "ifaddr",
+  "pycryptodome",
+  "platformdirs",
+  "typing_extensions>=4.5.0",
 ]
 
 # Development dependencies (PEP 735). Installed by default with `uv sync`.
@@ -31,6 +40,10 @@ dev = [
   # pydantic is required by dev/CI: mypy loads it as a plugin (mypy.ini ->
   # `plugins = pydantic.mypy`), so it must stay installed for `scripts/mypy.sh`.
   "pydantic==2.13.4",
+  # HA 2024.4 imports josepy.ComparableX509, removed by josepy 2.x.
+  "josepy==1.14.0 ; python_version == '3.12'",
+  # Static analysis imports the same checked-in wheel used by the integration.
+  "midea-lan==2026.8.29",
 ]
 
 # Optional runtime extras for the local `uv run hass` dev/debug environment
@@ -49,6 +62,9 @@ run = [
 # This is a Home Assistant custom component, not a buildable/publishable package.
 # uv only manages the virtualenv and dependencies; it does not build this project.
 package = false
+
+[tool.uv.sources]
+midea-lan = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.29-py3-none-any.whl" }
 
 # ----------------------------------------------------------------------------
 # ruff configuration (migrated from the former ruff.toml).

@@ -8,8 +8,10 @@ English | [简体中文](README_hans.md) | [Discord Chat](https://discord.com/in
 
 Control your Midea M-Smart appliances via local area network.
 
-> This compatibility fork tracks the upstream project and adds read-only support for
-> Wahin model `220F4047`. It intentionally does not add setters for the probed features.
+> This compatibility fork tracks upstream and adds real-device-reviewed
+> person-airflow control, power-on preference restoration, and smart-light control
+> for Wahin model `220F4047`, subtype `8`. Unselected or unverified optional
+> entities are reversibly disabled rather than deleted and can be restored in Options.
 
 - Automated device discover and configuration based Home Assistant config flow UI.
 - Extra sensors and switches.

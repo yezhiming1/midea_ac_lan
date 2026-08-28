@@ -17,7 +17,7 @@ resolution-markers = [
 ]
 dependencies = [
     { name = "cryptography", version = "42.0.5", source = { registry = "https://pypi.org/simple" } },
-    { name = "josepy", version = "2.2.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "josepy", version = "1.14.0", source = { registry = "https://pypi.org/simple" } },
     { name = "pyopenssl", version = "24.1.0", source = { registry = "https://pypi.org/simple" } },
     { name = "pyrfc3339" },
     { name = "pytz" },
@@ -2344,6 +2344,22 @@ wheels = [
 
 [[package]]
 name = "josepy"
+version = "1.14.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.13'",
+]
+dependencies = [
+    { name = "cryptography", version = "42.0.5", source = { registry = "https://pypi.org/simple" } },
+    { name = "pyopenssl", version = "24.1.0", source = { registry = "https://pypi.org/simple" } },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2c/cd/684c45107851da4507854ef4b16fcdce448e02668f0e7c359d0558cbfbeb/josepy-1.14.0.tar.gz", hash = "sha256:308b3bf9ce825ad4d4bba76372cf19b5dc1c2ce96a9d298f9642975e64bd13dd", size = 58794, upload-time = "2023-11-01T13:40:31.132Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8b/9b/2ba5943ca36213123cf54a21629695c9bf168ee135f06ad17e89f9f6236c/josepy-1.14.0-py3-none-any.whl", hash = "sha256:d2b36a30f316269f3242f4c2e45e15890784178af5ec54fa3e49cf9234ee22e0", size = 32180, upload-time = "2023-11-01T13:40:29.338Z" },
+]
+
+[[package]]
+name = "josepy"
 version = "1.15.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
@@ -2364,11 +2380,9 @@ version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14.2'",
-    "python_full_version < '3.13'",
 ]
 dependencies = [
-    { name = "cryptography", version = "42.0.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
-    { name = "cryptography", version = "46.0.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "cryptography", version = "46.0.5", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7f/ad/6f520aee9cc9618d33430380741e9ef859b2c560b1e7915e755c084f6bc0/josepy-2.2.0.tar.gz", hash = "sha256:74c033151337c854f83efe5305a291686cef723b4b970c43cfe7270cf4a677a9", size = 56500, upload-time = "2025-10-14T14:54:42.108Z" }
 wheels = [
@@ -2547,7 +2561,16 @@ name = "midea-ac-lan"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "midea-lan" },
+    { name = "aiofiles" },
+    { name = "aiohttp", version = "3.9.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
+    { name = "aiohttp", version = "3.11.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.13.*'" },
+    { name = "aiohttp", version = "3.13.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "colorlog" },
+    { name = "defusedxml" },
+    { name = "ifaddr" },
+    { name = "platformdirs" },
+    { name = "pycryptodome" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -2555,6 +2578,8 @@ dev = [
     { name = "homeassistant", version = "2024.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "homeassistant", version = "2024.12.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.13.*'" },
     { name = "homeassistant", version = "2026.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "josepy", version = "1.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
+    { name = "midea-lan" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pydantic" },
@@ -2568,13 +2593,24 @@ run = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "midea-lan", git = "https://github.com/yezhiming1/midea-lan.git?rev=8cb221345db81a898b79de477ce8e8de724afe3c" }]
+requires-dist = [
+    { name = "aiofiles" },
+    { name = "aiohttp" },
+    { name = "colorlog" },
+    { name = "defusedxml" },
+    { name = "ifaddr" },
+    { name = "platformdirs" },
+    { name = "pycryptodome" },
+    { name = "typing-extensions", specifier = ">=4.5.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "homeassistant", marker = "python_full_version == '3.12.*'", specifier = "==2024.4.1" },
     { name = "homeassistant", marker = "python_full_version == '3.13.*'", specifier = "==2024.12.1" },
     { name = "homeassistant", marker = "python_full_version >= '3.14.2'", specifier = "==2026.3.1" },
+    { name = "josepy", marker = "python_full_version == '3.12.*'", specifier = "==1.14.0" },
+    { name = "midea-lan", path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.29-py3-none-any.whl" },
     { name = "mypy", specifier = "==2.3.1" },
     { name = "pre-commit", specifier = "==4.6.2" },
     { name = "pydantic", specifier = "==2.13.4" },
@@ -2589,8 +2625,8 @@ run = [
 
 [[package]]
 name = "midea-lan"
-version = "2026.8.28"
-source = { git = "https://github.com/yezhiming1/midea-lan.git?rev=8cb221345db81a898b79de477ce8e8de724afe3c#8cb221345db81a898b79de477ce8e8de724afe3c" }
+version = "2026.8.29"
+source = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.29-py3-none-any.whl" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp", version = "3.9.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
@@ -2602,6 +2638,21 @@ dependencies = [
     { name = "platformdirs" },
     { name = "pycryptodome" },
     { name = "typing-extensions" },
+]
+wheels = [
+    { filename = "midea_lan-2026.8.29-py3-none-any.whl", hash = "sha256:30f6c7ccf310e903ceb327edc9212c1c995f6c23cefeaf5e0542b919444f0f76" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiofiles" },
+    { name = "aiohttp" },
+    { name = "colorlog" },
+    { name = "defusedxml" },
+    { name = "ifaddr" },
+    { name = "platformdirs" },
+    { name = "pycryptodome" },
+    { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 
 [[package]]
