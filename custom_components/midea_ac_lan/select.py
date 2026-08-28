@@ -243,7 +243,13 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
             ACAttributes.wind_avoid.value,
         }.intersection(status):
             actual = self._actual_option()
-            if actual != PERSON_AIRFLOW_OFF or time.monotonic() >= self._pending_until:
+            # During the short power-on boot window the firmware reports both
+            # flags as off before the delayed restore is sent.  Treat that as a
+            # transient while a restore callback is pending, otherwise the
+            # remembered preference is overwritten before it can be reapplied.
+            if self._restore_handle is None and (
+                actual != PERSON_AIRFLOW_OFF or time.monotonic() >= self._pending_until
+            ):
                 self._desired_option = actual
                 self._pending_until = 0.0
 
