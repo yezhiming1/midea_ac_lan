@@ -213,6 +213,30 @@ class ModelControlTests(unittest.TestCase):
         loop.run_delayed()
         self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_TOWARD])
 
+    def test_boot_reset_status_does_not_erase_pending_preference(self) -> None:
+        """Boot-time off flags must not win before the delayed restore runs."""
+        device = FakeACDevice(power=False)
+        entity = MideaPersonAirflowSelect(as_midea_device(device), PERSON_AIRFLOW_MODE)
+        loop = FakeLoop()
+        entity.hass = SimpleNamespace(loop=loop, is_stopping=False)
+        entity._last_power = False
+
+        with patch.object(entity, "async_write_ha_state"):
+            entity.select_option(PERSON_AIRFLOW_TOWARD)
+        device.values[ACAttributes.power.value] = True
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({ACAttributes.power.value: True})
+            entity.update_state(
+                {
+                    ACAttributes.wind_straight.value: False,
+                    ACAttributes.wind_avoid.value: False,
+                },
+            )
+
+        self.assertEqual(entity.current_option, PERSON_AIRFLOW_TOWARD)
+        loop.run_delayed()
+        self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_TOWARD])
+
     def test_manual_selection_cancels_pending_power_on_restore(self) -> None:
         """A user command wins over an earlier delayed restore."""
         device = FakeACDevice(power=True)
