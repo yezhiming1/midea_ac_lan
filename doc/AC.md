@@ -95,6 +95,23 @@ Known settings:
 | --------------------------- | ------- | -------------- |
 | climate.{DEVICEID}\_climate | climate | Climate entity |
 
+### Model 220F4047 read-only entities
+
+These entities are created by default only for model `220F4047`. They report device
+state and do not provide setter or service control. Smart Light Sensing also exposes
+the protocol value as the `raw_value` state attribute.
+
+| EntityID                                  | Class         | Description         |
+| ----------------------------------------- | ------------- | ------------------- |
+| binary_sensor.{DEVICEID}\_light_sensitive | binary_sensor | Smart Light Sensing |
+| binary_sensor.{DEVICEID}\_wind_straight   | binary_sensor | Wind Toward Person  |
+| binary_sensor.{DEVICEID}\_wind_avoid      | binary_sensor | Wind Avoid Person   |
+| binary_sensor.{DEVICEID}\_comfort_sleep   | binary_sensor | Sleep Manager       |
+
+`binary_sensor.{DEVICEID}_yb_wind_avoid` is an opt-in SN8 diagnostic entity for
+controlled comparison. `nobody_energy_save` and filter-life values are not exposed
+until the appliance returns a non-null value that can be validated.
+
 ### Extra entities
 
 | EntityID                                       | Class         | Description                      |

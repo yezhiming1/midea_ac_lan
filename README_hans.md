@@ -1,12 +1,14 @@
 # Midea AC LAN
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
-[![Stable](https://img.shields.io/github/v/release/wuwentao/midea_ac_lan)](https://github.com/wuwentao/midea_ac_lan/releases/latest)
-[![Super-Linter](https://github.com/wuwentao/midea_ac_lan/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Stable](https://img.shields.io/github/v/release/yezhiming1/midea_ac_lan)](https://github.com/yezhiming1/midea_ac_lan/releases/latest)
+[![Super-Linter](https://github.com/yezhiming1/midea_ac_lan/actions/workflows/linter.yml/badge.svg)](https://github.com/yezhiming1/midea_ac_lan/actions/workflows/linter.yml)
 
 [English](README.md) | 简体中文 | [Discord交流群](https://discord.com/invite/ZWdd2fXndn) | [QQ交流群](https://qm.qq.com/q/l53SGEwlZ6)
 
 通过本地局域网控制你的美的M-Smart设备
+
+> 本兼容分支跟随上游项目，并为华凌 `220F4047` 增加只读功能适配；探测到的功能不会新增写入控制。
 
 - 通过Home Assistant UI完成设备的自动搜索和配置.
 - 生成额外的传感器和开关方便进行设备控制.
@@ -94,7 +96,7 @@
 ### 方式1: HACS安装
 
 > 1. 确保`Home Assistant`中已安装HACS [HACS install docs](https://hacs.xyz/docs/setup/download)
-> 2. 打开`HACS`, 点击`[Custom repositories]`, `Repository` 输入: `https://github.com/wuwentao/midea_ac_lan`, `Category` 选择 `[Integration]`
+> 2. 打开`HACS`, 点击`[Custom repositories]`, `Repository` 输入: `https://github.com/yezhiming1/midea_ac_lan`, `Category` 选择 `[Integration]`
 > 3. **重启Home Assistant**.
 
 ### 方式2: 脚本安装
@@ -102,12 +104,12 @@
 > 在HomeAssistant的Terminal add-on或者SSH中执行以下脚本
 
 ```shell
-wget -O - https://github.com/wuwentao/midea_ac_lan/raw/main/scripts/install.sh | ARCHIVE_TAG=latest bash -
+wget -O - https://github.com/yezhiming1/midea_ac_lan/raw/main/scripts/install.sh | ARCHIVE_TAG=latest bash -
 ```
 
 ### 方式3: 手工安装
 
-> 1. 从[Latest Release](https://github.com/wuwentao/midea_ac_lan/releases/latest) 下载 `midea_ac_lan.zip`
+> 1. 从[Latest Release](https://github.com/yezhiming1/midea_ac_lan/releases/latest) 下载 `midea_ac_lan.zip`
 > 2. 复制 `midea_ac_lan.zip` 到 `/custom_components/midea_ac_lan`.
 > 3. **重启 Home Assistant**.
 
@@ -195,7 +197,7 @@ wget -O - https://github.com/wuwentao/midea_ac_lan/raw/main/scripts/install.sh |
 开发环境使用 [uv](https://docs.astral.sh/uv/)（无需 Docker）。安装 uv 后：
 
 ```shell
-git clone https://github.com/wuwentao/midea_ac_lan.git
+git clone https://github.com/yezhiming1/midea_ac_lan.git
 cd midea_ac_lan
 ./scripts/setup.sh
 ```

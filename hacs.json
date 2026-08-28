@@ -1,5 +1,5 @@
 {
-  "name": "Midea AC LAN",
+  "name": "Midea AC LAN (220F4047 Fix)",
   "homeassistant": "2024.4.1",
   "zip_release": true,
   "filename": "midea_ac_lan.zip"

@@ -74,6 +74,21 @@
 | --------------------------- | ------- | ---------- |
 | climate.{DEVICEID}\_climate | climate | 恒温器实体 |
 
+### 220F4047 型号只读实体
+
+以下实体仅为 `220F4047` 默认创建，只读取设备状态，不提供写入控制或服务调用。
+“智能光感”还会在实体属性 `raw_value` 中保留协议原始值。
+
+| 实体ID                                    | 类型          | 描述     |
+| ----------------------------------------- | ------------- | -------- |
+| binary_sensor.{DEVICEID}\_light_sensitive | binary_sensor | 智能光感 |
+| binary_sensor.{DEVICEID}\_wind_straight   | binary_sensor | 风吹人   |
+| binary_sensor.{DEVICEID}\_wind_avoid      | binary_sensor | 风避人   |
+| binary_sensor.{DEVICEID}\_comfort_sleep   | binary_sensor | 睡眠管家 |
+
+`binary_sensor.{DEVICEID}_yb_wind_avoid` 是默认不启用的 SN8 风避人诊断实体，
+用于受控实机对比。人走节能和滤网寿命在设备返回可验证的非空值前不生成实体。
+
 ### 额外生成实体
 
 | EntityID                                       | 类型          | 名称                             | 描述              |

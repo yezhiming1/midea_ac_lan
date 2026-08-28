@@ -255,6 +255,21 @@
       "electronic_smell": {
         "name": "净味杀菌"
       },
+      "light_sensitive": {
+        "name": "智能光感"
+      },
+      "sleep_manager": {
+        "name": "睡眠管家"
+      },
+      "wind_avoid_person": {
+        "name": "风避人"
+      },
+      "wind_avoid_person_sn8": {
+        "name": "风避人（SN8 诊断）"
+      },
+      "wind_toward_person": {
+        "name": "风吹人"
+      },
       "water_pump_running": {
         "name": "水泵运行"
       }
