@@ -1,10 +1,10 @@
 {
   "name": "midea-lan",
-  "version": "2026.8.30",
-  "source": "https://github.com/yezhiming1/midea-lan",
-  "commit": "f882b586a1d92a2936ba6c239e4fb4e0ea8e8cee",
-  "wheel": "midea_lan-2026.8.30-py3-none-any.whl",
-  "sha256": "431d0ded766868aa13a4760e7f798d8fb053ea692c2c1d9380345d54d719ae2e",
+  "version": "0.0.1",
+  "source": "local:midea-lan-2026.8.30-worktree",
+  "commit": "c582ac8ae4a5356db1e14d042371ccd3881e2657",
+  "wheel": "midea_lan-0.0.1-py3-none-any.whl",
+  "sha256": "612c317f08db04764fea94878962060044ba332fd520fa2745f53e25e7107e93",
   "license": "MIT",
   "license_file": "MIDEA_LAN_LICENSE.txt"
 }
