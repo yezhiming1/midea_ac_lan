@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026.8.30](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.29...v2026.8.30) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ac:** preserve and restore person-airflow preference across device reconnects
+* **dependency:** bundle midea-lan 2026.8.30 connection-availability fix
+
 ## [2026.8.29](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.28...v2026.8.29) (2026-08-29)
 
 

@@ -237,6 +237,50 @@ class ModelControlTests(unittest.TestCase):
         loop.run_delayed()
         self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_TOWARD])
 
+    def test_reconnect_restores_preference_after_boot_reset_status(self) -> None:
+        """An unavailable/available cycle restores even without a power edge."""
+        device = FakeACDevice(power=True)
+        entity = MideaPersonAirflowSelect(as_midea_device(device), PERSON_AIRFLOW_MODE)
+        loop = FakeLoop()
+        entity.hass = SimpleNamespace(loop=loop, is_stopping=False)
+        entity._last_power = True
+        entity._last_available = True
+
+        with patch.object(entity, "schedule_update_ha_state"):
+            entity.select_option(PERSON_AIRFLOW_TOWARD)
+        device.person_airflow_calls.clear()
+
+        device.available = False
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({"available": False})
+            entity.update_state(
+                {
+                    ACAttributes.wind_straight.value: False,
+                    ACAttributes.wind_avoid.value: False,
+                },
+            )
+        self.assertEqual(entity.current_option, PERSON_AIRFLOW_TOWARD)
+
+        device.available = True
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({"available": True})
+
+        self.assertIsNotNone(loop.delayed_callback)
+        loop.run_delayed()
+        self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_TOWARD])
+
+    def test_unavailable_selection_waits_for_reconnect(self) -> None:
+        """A selection made offline is remembered without a doomed socket write."""
+        device = FakeACDevice(power=True)
+        device.available = False
+        entity = MideaPersonAirflowSelect(as_midea_device(device), PERSON_AIRFLOW_MODE)
+
+        with patch.object(entity, "schedule_update_ha_state"):
+            entity.select_option(PERSON_AIRFLOW_AVOID)
+
+        self.assertEqual(entity.current_option, PERSON_AIRFLOW_AVOID)
+        self.assertEqual(device.person_airflow_calls, [])
+
     def test_manual_selection_cancels_pending_power_on_restore(self) -> None:
         """A user command wins over an earlier delayed restore."""
         device = FakeACDevice(power=True)

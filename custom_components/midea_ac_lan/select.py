@@ -174,6 +174,7 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
         super().__init__(device, entity_key)
         self._desired_option: str = PERSON_AIRFLOW_OFF
         self._last_power: bool | None = None
+        self._last_available: bool | None = None
         self._pending_until = 0.0
         self._restore_handle: TimerHandle | None = None
 
@@ -191,6 +192,7 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
         else:
             self._desired_option = self._actual_option()
         self._last_power = bool(self._device.get_attribute(ACAttributes.power))
+        self._last_available = bool(self._device.available)
         if self._last_power and self._desired_option != PERSON_AIRFLOW_OFF:
             self._schedule_restore()
         self.async_write_ha_state()
@@ -215,7 +217,9 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
             self._restore_handle.cancel()
             self._restore_handle = None
         self._desired_option = option
-        if bool(self._device.get_attribute(ACAttributes.power)):
+        if bool(self._device.get_attribute(ACAttributes.power)) and bool(
+            self._device.available,
+        ):
             self._apply_desired_option()
         # select_option runs in Home Assistant's executor because this is the
         # synchronous SelectEntity API. Queue the state update thread-safely.
@@ -236,14 +240,23 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
             return
 
         power = bool(self._device.get_attribute(ACAttributes.power))
+        available = bool(self._device.available)
         power_just_enabled = power and self._last_power is False
+        available_just_enabled = available and self._last_available is False
         self._last_power = power
-        if power_just_enabled and self._desired_option != PERSON_AIRFLOW_OFF:
+        self._last_available = available
+        if (
+            power_just_enabled or available_just_enabled
+        ) and self._desired_option != PERSON_AIRFLOW_OFF:
             self.hass.loop.call_soon_threadsafe(self._schedule_restore)
-        elif power and {
-            ACAttributes.wind_straight.value,
-            ACAttributes.wind_avoid.value,
-        }.intersection(status):
+        elif (
+            available
+            and power
+            and {
+                ACAttributes.wind_straight.value,
+                ACAttributes.wind_avoid.value,
+            }.intersection(status)
+        ):
             actual = self._actual_option()
             # During the short power-on boot window the firmware reports both
             # flags as off before the delayed restore is sent.  Treat that as a
@@ -275,6 +288,7 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
         if (
             self.hass
             and not self.hass.is_stopping
+            and bool(self._device.available)
             and bool(self._device.get_attribute(ACAttributes.power))
             and self._desired_option != PERSON_AIRFLOW_OFF
         ):
