@@ -368,6 +368,14 @@
           "full": "Full"
         }
       },
+      "person_airflow_mode": {
+        "name": "Person Airflow Mode",
+        "state": {
+          "off": "Off",
+          "toward": "Wind Toward Person",
+          "avoid": "Wind Avoid Person"
+        }
+      },
       "mode": {
         "name": "Mode"
       },
@@ -946,6 +954,9 @@
       },
       "smart_eye": {
         "name": "Smart Eye"
+      },
+      "light_sensitive_control": {
+        "name": "Smart Light Sensing"
       },
       "smart_volume": {
         "name": "Smart Volume"

@@ -959,6 +959,7 @@ class MideaLanOptionsFlowHandler(OptionsFlow):
             if not supports_model(
                 self._config_entry.data.get(CONF_MODEL),
                 attribute_config,
+                self._config_entry.data.get(CONF_SUBTYPE),
             ):
                 continue
             attribute_name = (

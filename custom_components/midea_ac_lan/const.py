@@ -1,7 +1,7 @@
 """Const for Midea Lan."""
 
 from enum import IntEnum
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from homeassistant.const import Platform
 
@@ -17,6 +17,17 @@ CONF_SERVER = "server"
 CONF_REFRESH_INTERVAL = "refresh_interval"
 CONF_MAC = "mac"
 CONF_SN = "sn"
+
+LIGHT_SENSITIVE_CONTROL = "light_sensitive_control"
+PERSON_AIRFLOW_MODE = "person_airflow_mode"
+PERSON_AIRFLOW_OFF: Final = "off"
+PERSON_AIRFLOW_TOWARD: Final = "toward"
+PERSON_AIRFLOW_AVOID: Final = "avoid"
+PERSON_AIRFLOW_MODES: Final = (
+    PERSON_AIRFLOW_OFF,
+    PERSON_AIRFLOW_TOWARD,
+    PERSON_AIRFLOW_AVOID,
+)
 
 EXTRA_SENSOR = [Platform.SENSOR, Platform.BINARY_SENSOR]
 EXTRA_SWITCH = [
@@ -38,7 +49,11 @@ EXTRA_CONTROL = [
 ALL_PLATFORM = EXTRA_SENSOR + EXTRA_CONTROL
 
 
-def supports_model(model: object, config: dict[str, Any]) -> bool:
+def supports_model(
+    model: object,
+    config: dict[str, Any],
+    subtype: object | None = None,
+) -> bool:
     """Return if the entity config applies to the device model.
 
     Returns
@@ -47,7 +62,10 @@ def supports_model(model: object, config: dict[str, Any]) -> bool:
 
     """
     models = config.get("models")
-    return not models or str(model) in cast("list[str]", models)
+    if models and str(model) not in cast("list[str]", models):
+        return False
+    subtypes = config.get("subtypes")
+    return not subtypes or subtype in cast("list[object]", subtypes)
 
 
 class FanSpeed(IntEnum):

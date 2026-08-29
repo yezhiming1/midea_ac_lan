@@ -9,11 +9,29 @@ integration load process:
 3. unloading a config entry: `async_unload_entry`
 """
 
+# The verified wheel must be put on sys.path before importing Home Assistant or
+# midealan modules. Imports below this bootstrap are intentionally not at the
+# syntactic top of the file.
+# ruff: file-ignore[module-import-not-at-top-of-file]
+
 import logging
+import sys
+from pathlib import Path
 from typing import Any, cast
+
+_VENDORED_MIDEALAN_VERSION = "2026.8.29"
+_VENDORED_MIDEALAN_WHEEL = (
+    Path(__file__).with_name("_vendor")
+    / f"midea_lan-{_VENDORED_MIDEALAN_VERSION}-py3-none-any.whl"
+)
+if not _VENDORED_MIDEALAN_WHEEL.is_file():
+    msg = f"Bundled midea-lan wheel is missing: {_VENDORED_MIDEALAN_WHEEL}"
+    raise ImportError(msg)
+sys.path.insert(0, str(_VENDORED_MIDEALAN_WHEEL))
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+import homeassistant.helpers.entity_registry as er
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,6 +41,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_TOKEN,
     CONF_TYPE,
     MAJOR_VERSION,
@@ -33,6 +53,14 @@ from homeassistant.helpers.typing import ConfigType
 from midealan.device import DeviceType, MideaDevice, ProtocolVersion
 from midealan.devices import device_selector
 from midealan.discover import discover
+from midealan.version import __version__ as midealan_version
+
+if midealan_version != _VENDORED_MIDEALAN_VERSION:
+    msg = (
+        "Unexpected midea-lan version: "
+        f"loaded {midealan_version}, expected {_VENDORED_MIDEALAN_VERSION}"
+    )
+    raise ImportError(msg)
 
 from .const import (
     ALL_PLATFORM,
@@ -45,11 +73,52 @@ from .const import (
     CONF_SUBTYPE,
     DEVICES,
     DOMAIN,
+    EXTRA_CONTROL,
+    EXTRA_SENSOR,
     EXTRA_SWITCH,
+    supports_model,
 )
 from .midea_devices import MIDEA_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _reconcile_optional_entity_registry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device: MideaDevice,
+) -> None:
+    """Disable unselected optional entities and reversibly enable selected ones."""
+    registry = er.async_get(hass)
+    selected_sensors = set(config_entry.options.get(CONF_SENSORS, []))
+    selected_controls = set(config_entry.options.get(CONF_SWITCHES, []))
+    entities = cast("dict", MIDEA_DEVICES[device.device_type]["entities"])
+    for entity_key, config in entities.items():
+        platform = config.get("type")
+        if config.get("default") or platform not in {*EXTRA_SENSOR, *EXTRA_CONTROL}:
+            continue
+        key = entity_key if isinstance(entity_key, str) else entity_key.value
+        selected = selected_sensors if platform in EXTRA_SENSOR else selected_controls
+        should_enable = key in selected and supports_model(
+            device.model,
+            config,
+            device.subtype,
+        )
+        entity_domain = platform.value if hasattr(platform, "value") else str(platform)
+        unique_id = f"{DOMAIN}.{device.device_id}_{key}"
+        entity_id = registry.async_get_entity_id(entity_domain, DOMAIN, unique_id)
+        if entity_id is None:
+            continue
+        entry = registry.async_get(entity_id)
+        if entry is None:
+            continue
+        if should_enable and entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION:
+            registry.async_update_entity(entity_id, disabled_by=None)
+        elif not should_enable and entry.disabled_by is None:
+            registry.async_update_entity(
+                entity_id,
+                disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+            )
 
 
 def _close_device(device: MideaDevice) -> None:
@@ -268,6 +337,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device:
         if refresh_interval is not None:
             device.set_refresh_interval(refresh_interval)
+        _reconcile_optional_entity_registry(hass, config_entry, device)
         device.open()
         _device_store(hass)[device_id] = device
         try:

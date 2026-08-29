@@ -368,6 +368,14 @@
           "full": "强劲"
         }
       },
+      "person_airflow_mode": {
+        "name": "风随人模式",
+        "state": {
+          "off": "关闭",
+          "toward": "风吹人",
+          "avoid": "风避人"
+        }
+      },
       "mode": {
         "name": "模式"
       },
@@ -947,6 +955,9 @@
       "smart_eye": {
         "name": "智慧眼"
       },
+      "light_sensitive_control": {
+        "name": "智能光感"
+      },
       "smart_volume": {
         "name": "智能变容"
       },
@@ -978,10 +989,10 @@
         "name": "垂直摆风"
       },
       "self_clean": {
-        "name": "Self Clean"
+        "name": "智清洁"
       },
       "sound": {
-        "name": "Sound"
+        "name": "声音"
       },
       "tbh": {
         "name": "TBH"

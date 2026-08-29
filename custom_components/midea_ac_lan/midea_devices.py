@@ -75,6 +75,8 @@ from midealan.devices.x26 import DeviceAttributes as X26Attributes
 from midealan.devices.x34 import DeviceAttributes as X34Attributes
 from midealan.devices.x40 import DeviceAttributes as X40Attributes
 
+from .const import LIGHT_SENSITIVE_CONTROL, PERSON_AIRFLOW_MODE
+
 FRESH_AIR_EXHAUST = "fresh_air_exhaust"
 FRESH_AIR_EXHAUST_MODE = "fresh_air_exhaust_mode"
 FRESH_AIR_EXHAUST_POWER = "fresh_air_exhaust_power"
@@ -572,6 +574,26 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "models": ["220F4047"],
                 "default": True,
                 "raw_value": True,
+            },
+            LIGHT_SENSITIVE_CONTROL: {
+                "type": Platform.SWITCH,
+                "required_attribute": ACAttributes.light_sensitive,
+                "translation_key": "light_sensitive_control",
+                "name": "Smart Light Sensing",
+                "icon": "mdi:brightness-auto",
+                "models": ["220F4047"],
+                "subtypes": [8],
+                "set_message": "ac_light_sensitive",
+            },
+            PERSON_AIRFLOW_MODE: {
+                "type": Platform.SELECT,
+                "translation_key": "person_airflow_mode",
+                "name": "Person Airflow Mode",
+                "icon": "mdi:account-switch",
+                "models": ["220F4047"],
+                "subtypes": [8],
+                "options_static": ["off", "toward", "avoid"],
+                "set_message": "ac_person_airflow_mode",
             },
             ACAttributes.wind_straight: {
                 "type": Platform.BINARY_SENSOR,
