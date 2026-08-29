@@ -217,7 +217,9 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
         self._desired_option = option
         if bool(self._device.get_attribute(ACAttributes.power)):
             self._apply_desired_option()
-        self.async_write_ha_state()
+        # select_option runs in Home Assistant's executor because this is the
+        # synchronous SelectEntity API. Queue the state update thread-safely.
+        self.schedule_update_ha_state()
 
     @callback
     def update_state(self, status: Any) -> None:  # ruff:ignore[any-type]
@@ -248,7 +250,8 @@ class MideaPersonAirflowSelect(MideaSelect, RestoreEntity):
             # transient while a restore callback is pending, otherwise the
             # remembered preference is overwritten before it can be reapplied.
             if self._restore_handle is None and (
-                actual != PERSON_AIRFLOW_OFF or time.monotonic() >= self._pending_until
+                actual == self._desired_option
+                or time.monotonic() >= self._pending_until
             ):
                 self._desired_option = actual
                 self._pending_until = 0.0

@@ -13,6 +13,8 @@
 
 ### Bug Fixes
 
+* **ac:** keep a manual person-airflow selection during device readback settling
+* **ac:** queue person-airflow state updates safely from Home Assistant's executor
 * **dependency:** bundle the verified midea-lan 2026.8.29 wheel so Home Assistant startup does not depend on a Git fetch
 
 ## [2026.8.28](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.0...v2026.8.28) (2026-08-28)

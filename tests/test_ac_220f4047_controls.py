@@ -179,18 +179,18 @@ class ModelControlTests(unittest.TestCase):
         device = FakeACDevice(power=False)
         entity = MideaPersonAirflowSelect(as_midea_device(device), PERSON_AIRFLOW_MODE)
 
-        with patch.object(entity, "async_write_ha_state"):
+        with patch.object(entity, "schedule_update_ha_state"):
             entity.select_option(PERSON_AIRFLOW_AVOID)
         self.assertEqual(entity.current_option, PERSON_AIRFLOW_AVOID)
         self.assertEqual(device.person_airflow_calls, [])
 
         device.values[ACAttributes.power.value] = True
-        with patch.object(entity, "async_write_ha_state"):
+        with patch.object(entity, "schedule_update_ha_state"):
             entity.select_option(PERSON_AIRFLOW_TOWARD)
         self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_TOWARD])
 
         with (
-            patch.object(entity, "async_write_ha_state"),
+            patch.object(entity, "schedule_update_ha_state"),
             self.assertRaisesRegex(ValueError, "Unsupported person-airflow mode"),
         ):
             entity.select_option("sideways")
@@ -203,7 +203,7 @@ class ModelControlTests(unittest.TestCase):
         entity.hass = SimpleNamespace(loop=loop, is_stopping=False)
         entity._last_power = False
 
-        with patch.object(entity, "async_write_ha_state"):
+        with patch.object(entity, "schedule_update_ha_state"):
             entity.select_option(PERSON_AIRFLOW_TOWARD)
         device.values[ACAttributes.power.value] = True
         with patch.object(entity, "schedule_update_if_running"):
@@ -221,7 +221,7 @@ class ModelControlTests(unittest.TestCase):
         entity.hass = SimpleNamespace(loop=loop, is_stopping=False)
         entity._last_power = False
 
-        with patch.object(entity, "async_write_ha_state"):
+        with patch.object(entity, "schedule_update_ha_state"):
             entity.select_option(PERSON_AIRFLOW_TOWARD)
         device.values[ACAttributes.power.value] = True
         with patch.object(entity, "schedule_update_if_running"):
@@ -244,12 +244,34 @@ class ModelControlTests(unittest.TestCase):
         pending = FakeTimerHandle()
         entity._restore_handle = cast("TimerHandle", pending)
 
-        with patch.object(entity, "async_write_ha_state"):
+        with patch.object(entity, "schedule_update_ha_state"):
             entity.select_option(PERSON_AIRFLOW_AVOID)
 
         self.assertTrue(pending.cancelled)
         self.assertIsNone(entity._restore_handle)
         self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_AVOID])
+
+    def test_manual_off_ignores_stale_active_readback_during_settle(self) -> None:
+        """An old device response must not undo a just-requested off state."""
+        device = FakeACDevice(power=True)
+        device.values[ACAttributes.wind_avoid.value] = True
+        entity = MideaPersonAirflowSelect(as_midea_device(device), PERSON_AIRFLOW_MODE)
+        entity.hass = SimpleNamespace()
+
+        with (
+            patch.object(entity, "schedule_update_ha_state"),
+            patch.object(entity, "schedule_update_if_running"),
+        ):
+            entity.select_option(PERSON_AIRFLOW_OFF)
+            entity.update_state({ACAttributes.wind_avoid.value: True})
+
+        self.assertEqual(entity.current_option, PERSON_AIRFLOW_OFF)
+        self.assertEqual(device.person_airflow_calls, [PERSON_AIRFLOW_OFF])
+
+        entity._pending_until = 0.0
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({ACAttributes.wind_avoid.value: True})
+        self.assertEqual(entity.current_option, PERSON_AIRFLOW_AVOID)
 
     def test_smart_light_switch_uses_model_specific_api(self) -> None:
         """The synthetic switch reads the raw sensor and calls the safe API."""
