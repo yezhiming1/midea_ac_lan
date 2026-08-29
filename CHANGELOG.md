@@ -1,6 +1,6 @@
 # Changelog
 
-## [2026.8.29](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.28...v2026.8.29) (2026-08-28)
+## [2026.8.29](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.28...v2026.8.29) (2026-08-29)
 
 
 ### Features
@@ -13,6 +13,7 @@
 
 ### Bug Fixes
 
+* **ac:** route the existing screen-display switch through the verified absolute 220F4047 protocol
 * **ac:** keep a manual person-airflow selection during device readback settling
 * **ac:** queue person-airflow state updates safely from Home Assistant's executor
 * **dependency:** bundle the verified midea-lan 2026.8.29 wheel so Home Assistant startup does not depend on a Git fetch
