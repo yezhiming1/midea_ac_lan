@@ -2640,7 +2640,7 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { filename = "midea_lan-0.0.2-py3-none-any.whl", hash = "sha256:13d3d0181e892d7e264e046a6262310454bf8b71227fcbd1c1ffbf603366296e" },
+    { filename = "midea_lan-0.0.2-py3-none-any.whl", hash = "sha256:0ea67da85b76c1b15b293386ca1d66edf07a9c3361e254acdd123dcf37239f18" },
 ]
 
 [package.metadata]

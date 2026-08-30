@@ -1,6 +1,6 @@
 """Sensor for Midea Lan."""
 
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,11 +13,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
+from midealan.const import DeviceType
 from midealan.device import MideaDevice
+from midealan.devices.ca import DeviceAttributes as CAAttributes
 
 from .const import DEVICES, DOMAIN, supports_model
 from .midea_devices import MIDEA_DEVICES
 from .midea_entity import MideaEntity
+
+MODEL_310A2111: Final = "310A2111"
+SUBTYPE_310A2111: Final = 56
+FLEX_ZONE_MODE_BY_TEMPERATURE: Final[dict[float, str]] = {
+    6.0: "mother_infant",
+    2.0: "treasure",
+    0.0: "zero_degree",
+}
 
 
 async def async_setup_entry(
@@ -46,12 +56,7 @@ async def async_setup_entry(
             and required_attribute not in device.attributes
         ):
             continue
-        sensor = (
-            MideaEstimatedUsageSensor(device, entity_key)
-            if config.get("estimate")
-            else MideaSensor(device, entity_key)
-        )
-        sensors.append(sensor)
+        sensors.append(_create_sensor(device, entity_key, config))
     async_add_entities(sensors)
 
 
@@ -104,6 +109,30 @@ class MideaSensor(MideaEntity, SensorEntity):
         if self.options is not None:
             return {"options": self.options}
         return {"state_class": self.state_class} if self.state_class else {}
+
+
+class MideaCA310A2111FlexZoneModeSensor(MideaSensor):
+    """Represent the three fixed flex-zone presets of refrigerator 310A2111."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Derive the App preset from the model's reported setting temperature."""
+        temperature = self._device.get_attribute(
+            CAAttributes.flex_zone_setting_temp,
+        )
+        if isinstance(temperature, (int, float)) and not isinstance(temperature, bool):
+            return FLEX_ZONE_MODE_BY_TEMPERATURE.get(float(temperature))
+        return None
+
+    @property
+    def device_class(self) -> SensorDeviceClass:
+        """Expose the derived value as a translated enum sensor."""
+        return SensorDeviceClass.ENUM
+
+    @property
+    def options(self) -> list[str]:
+        """The three presets verified against the MSmartHome App."""
+        return list(FLEX_ZONE_MODE_BY_TEMPERATURE.values())
 
 
 class MideaEstimatedUsageSensor(MideaSensor, RestoreEntity):
@@ -189,3 +218,27 @@ class MideaEstimatedUsageSensor(MideaSensor, RestoreEntity):
             "progress" in status or "status" in status or "mode" in status
         ):
             self.schedule_update_if_running()
+
+
+def _create_sensor(
+    device: MideaDevice,
+    entity_key: str,
+    config: dict[str, Any],
+) -> MideaSensor:
+    """Create the sensor class required by a device-specific read contract.
+
+    Returns
+    -------
+    The specialized or generic sensor for the device and entity key.
+
+    """
+    if config.get("estimate"):
+        return MideaEstimatedUsageSensor(device, entity_key)
+    if (
+        device.device_type == DeviceType.CA
+        and str(device.model) == MODEL_310A2111
+        and device.subtype == SUBTYPE_310A2111
+        and entity_key == CAAttributes.variable_mode
+    ):
+        return MideaCA310A2111FlexZoneModeSensor(device, entity_key)
+    return MideaSensor(device, entity_key)

@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.0.4 (2026-08-30)
+
+### Bug Fixes
+
+* **refrigerator:** derive the 310A2111 subtype-56 flex-zone mode from the three App-verified 6/2/0 °C presets
+* **dependency:** correct the lockfile hash for the unchanged verified bundled midea-lan 0.0.2 wheel
+
 ## V0.0.3 (2026-08-30)
 
 ### Bug Fixes
