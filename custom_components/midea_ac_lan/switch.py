@@ -73,6 +73,13 @@ class MideaLightSensitiveSwitch(MideaSwitch):
         """Whether smart-light sensing is enabled at any sensitivity level."""
         return bool(self._device.get_attribute(ACAttributes.light_sensitive))
 
+    def update_state(self, status: Any) -> None:  # ruff:ignore[any-type]
+        """Refresh when the backing raw sensor changes."""
+        raw_key = ACAttributes.light_sensitive.value
+        if raw_key in status and self._entity_key not in status:
+            status = {**status, self._entity_key: status[raw_key]}
+        super().update_state(status)
+
     def turn_on(self, **kwargs: Any) -> None:  # ruff:ignore[any-type, unused-method-argument]
         """Enable smart-light sensing at the App's high/on value."""
         cast("MideaACDevice", self._device).set_light_sensitive(True)

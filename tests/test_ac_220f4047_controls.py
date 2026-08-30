@@ -39,6 +39,7 @@ from midea_ac_lan.const import (
     PERSON_AIRFLOW_TOWARD,
     supports_model,
 )
+from midea_ac_lan.midea_devices import MIDEA_DEVICES
 from midea_ac_lan.select import MideaPersonAirflowSelect
 from midea_ac_lan.switch import MideaLightSensitiveSwitch
 
@@ -173,6 +174,32 @@ class ModelControlTests(unittest.TestCase):
         self.assertTrue(supports_model("220F4047", config, 8))
         self.assertFalse(supports_model("220F4047", config, 1))
         self.assertFalse(supports_model("other", config, 8))
+
+    def test_supports_model_exact_exclusion_is_reversible(self) -> None:
+        """An unverified control is hidden only for the exact device pair."""
+        config = {
+            "excluded_models": ["220F4047"],
+            "excluded_subtypes": [8],
+        }
+
+        self.assertFalse(supports_model("220F4047", config, 8))
+        self.assertTrue(supports_model("220F4047", config, 1))
+        self.assertTrue(supports_model("other", config, 8))
+
+    def test_app_feature_controls_match_exact_model(self) -> None:
+        """Smart temperature and power saving replace the unrelated ECO control."""
+        entities = cast("dict", MIDEA_DEVICES[0xAC]["entities"])
+
+        self.assertTrue(
+            supports_model("220F4047", entities[ACAttributes.cool_hot_sense], 8),
+        )
+        self.assertTrue(
+            supports_model("220F4047", entities[ACAttributes.power_saving], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.eco_mode], 8),
+        )
+        self.assertTrue(supports_model("other", entities[ACAttributes.eco_mode], 8))
 
     def test_person_airflow_select_applies_only_while_powered(self) -> None:
         """Off-device choices persist without writing; powered choices write once."""
@@ -329,6 +356,21 @@ class ModelControlTests(unittest.TestCase):
         entity.turn_off()
         entity.turn_on()
         self.assertEqual(device.light_sensitive_calls, [False, True])
+
+    @staticmethod
+    def test_smart_light_switch_refreshes_from_raw_sensor_update() -> None:
+        """A raw device update schedules the synthetic control entity once."""
+        device = FakeACDevice(power=False)
+        entity = MideaLightSensitiveSwitch(
+            as_midea_device(device),
+            LIGHT_SENSITIVE_CONTROL,
+        )
+        entity.hass = SimpleNamespace()
+
+        with patch.object(entity, "schedule_update_if_running") as schedule:
+            entity.update_state({ACAttributes.light_sensitive.value: 0})
+
+        schedule.assert_called_once_with()
 
     def test_actual_person_airflow_mapping(self) -> None:
         """Avoid wins if a malformed response reports both mutually exclusive flags."""
