@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
-_VENDORED_MIDEALAN_VERSION = "0.0.2"
+_VENDORED_MIDEALAN_VERSION = "0.0.3"
 _VENDORED_MIDEALAN_WHEEL = (
     Path(__file__).with_name("_vendor")
     / f"midea_lan-{_VENDORED_MIDEALAN_VERSION}-py3-none-any.whl"
