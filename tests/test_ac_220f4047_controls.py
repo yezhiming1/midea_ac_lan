@@ -232,7 +232,7 @@ class ModelControlTests(unittest.TestCase):
         """The broken climate swing control is absent only on the target unit."""
         target = FakeACDevice(power=True)
         target_entity = MideaACClimate(
-            target,
+            cast("MideaACDevice", target),
             "climate",
             SimpleNamespace(options={}),
         )
@@ -243,7 +243,7 @@ class ModelControlTests(unittest.TestCase):
         other = FakeACDevice(power=True)
         other.model = "other"
         other_entity = MideaACClimate(
-            other,
+            cast("MideaACDevice", other),
             "climate",
             SimpleNamespace(options={}),
         )
