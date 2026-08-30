@@ -28,6 +28,8 @@ PERSON_AIRFLOW_MODES: Final = (
     PERSON_AIRFLOW_TOWARD,
     PERSON_AIRFLOW_AVOID,
 )
+MODEL_220F4047: Final = "220F4047"
+SUBTYPE_220F4047: Final = 8
 
 EXTRA_SENSOR = [Platform.SENSOR, Platform.BINARY_SENSOR]
 EXTRA_SWITCH = [
@@ -65,7 +67,17 @@ def supports_model(
     if models and str(model) not in cast("list[str]", models):
         return False
     subtypes = config.get("subtypes")
-    return not subtypes or subtype in cast("list[object]", subtypes)
+    if subtypes and subtype not in cast("list[object]", subtypes):
+        return False
+    excluded_models = config.get("excluded_models")
+    excluded_subtypes = config.get("excluded_subtypes")
+    return not (
+        excluded_models
+        and str(model) in cast("list[str]", excluded_models)
+        and (
+            not excluded_subtypes or subtype in cast("list[object]", excluded_subtypes)
+        )
+    )
 
 
 class FanSpeed(IntEnum):

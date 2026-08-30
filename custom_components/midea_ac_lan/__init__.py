@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
-_VENDORED_MIDEALAN_VERSION = "2026.8.30"
+_VENDORED_MIDEALAN_VERSION = "0.0.2"
 _VENDORED_MIDEALAN_WHEEL = (
     Path(__file__).with_name("_vendor")
     / f"midea_lan-{_VENDORED_MIDEALAN_VERSION}-py3-none-any.whl"
@@ -346,6 +346,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 config_entry,
                 ALL_PLATFORM,
             )
+            # Reconcile again after platforms finish registering entities.  The
+            # pre-forward pass re-enables newly selected entries in time for
+            # setup; this post-forward pass makes unsupported legacy entries
+            # remain integration-disabled after platform reconciliation.
+            _reconcile_optional_entity_registry(hass, config_entry, device)
         except Exception:
             _device_store(hass).pop(device_id, None)
             _close_device(device)

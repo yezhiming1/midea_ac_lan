@@ -34,9 +34,10 @@ jobs:
             echo "Error: manifest.json version ($manifest_version) is not valid semver. Must be X.Y.Z without a 'v' prefix."
             exit 1
           fi
-          # Extract the release tag, strip optional leading "v"
+          # Extract the release tag, strip an optional leading "v" or "V"
           release_tag="${GITHUB_REF#refs/tags/}"
           release_tag_stripped="${release_tag#v}"
+          release_tag_stripped="${release_tag_stripped#V}"
           echo "Release tag: $release_tag (stripped: $release_tag_stripped)"
           # Check if the versions match
           if [ "$release_tag_stripped" != "$manifest_version" ]; then
@@ -77,7 +78,7 @@ jobs:
   upload_release:
     needs: generate_zip
     name: Publish release
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/V') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download All Artifacts

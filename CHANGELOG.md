@@ -1,5 +1,19 @@
 # Changelog
 
+## V0.0.2 (2026-08-30)
+
+### Features
+
+* **ac:** adapt subtype-8 vertical/horizontal swing and fixed outlet direction for model 220F4047
+* **ac:** add source-backed smart-temperature and power-saving controls matching the MSmartHome App
+* **ac:** route post-run drying through the model-specific B0 property protocol
+
+### Bug Fixes
+
+* **ac:** refresh the smart-light control entity from the device's raw reported state
+* **registry:** hide unsupported comfort, sleep, smart-eye, sleep-manager and duplicate ECO controls only for model 220F4047 subtype 8
+* **dependency:** bundle the verified midea-lan 0.0.2 wheel with exact source provenance
+
 ## [2026.8.30](https://github.com/yezhiming1/midea_ac_lan/compare/v2026.8.29...v2026.8.30) (2026-08-29)
 
 

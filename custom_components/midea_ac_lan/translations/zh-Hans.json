@@ -865,6 +865,9 @@
       "dry": {
         "name": "干燥"
       },
+      "cool_hot_sense": {
+        "name": "智控温"
+      },
       "cold_water_single": {
         "name": "单次零冷水"
       },
@@ -910,6 +913,9 @@
       "natural_wind": {
         "name": "自然风"
       },
+      "nobody_energy_save": {
+        "name": "人走节能"
+      },
       "night_light": {
         "name": "夜灯"
       },
@@ -918,6 +924,9 @@
       },
       "power": {
         "name": "电源开关"
+      },
+      "power_saving": {
+        "name": "省电"
       },
       "powerful_purify": {
         "name": "强净开关"

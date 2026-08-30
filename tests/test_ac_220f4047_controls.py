@@ -23,12 +23,14 @@ if TYPE_CHECKING:
 CUSTOM_COMPONENTS_ROOT = Path(__file__).parents[1] / "custom_components"
 sys.path.insert(0, str(CUSTOM_COMPONENTS_ROOT))
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.const import CONF_SENSORS, CONF_SWITCHES
 from homeassistant.helpers import entity_registry as er
 
 from midea_ac_lan import _reconcile_optional_entity_registry
 from midealan.devices.ac import (
     DeviceAttributes as ACAttributes,
+    MideaACDevice,
 )
 
 from midea_ac_lan.const import (
@@ -39,8 +41,10 @@ from midea_ac_lan.const import (
     PERSON_AIRFLOW_TOWARD,
     supports_model,
 )
+from midea_ac_lan.climate import MideaACClimate
+from midea_ac_lan.midea_devices import MIDEA_DEVICES
 from midea_ac_lan.select import MideaPersonAirflowSelect
-from midea_ac_lan.switch import MideaLightSensitiveSwitch
+from midea_ac_lan.switch import MideaLightSensitiveSwitch, MideaScreenDisplaySwitch
 
 
 class FakeACDevice:
@@ -62,15 +66,22 @@ class FakeACDevice:
             ACAttributes.wind_straight.value: False,
             ACAttributes.wind_avoid.value: False,
             ACAttributes.light_sensitive.value: 3,
+            ACAttributes.nobody_energy_save_tag.value: 0,
+            ACAttributes.screen_display.value: True,
+            ACAttributes.screen_display_alternate.value: False,
         }
         self.attributes = {
             ACAttributes.power: power,
             ACAttributes.wind_straight: False,
             ACAttributes.wind_avoid: False,
             ACAttributes.light_sensitive: 3,
+            ACAttributes.nobody_energy_save_tag: 0,
+            ACAttributes.screen_display: True,
+            ACAttributes.screen_display_alternate: False,
         }
         self.person_airflow_calls: list[str] = []
         self.light_sensitive_calls: list[bool] = []
+        self.attribute_calls: list[tuple[object, bool]] = []
 
     def get_attribute(self, attribute: object) -> bool | int | None:
         """Return an attribute by enum or string key.
@@ -90,6 +101,10 @@ class FakeACDevice:
     def set_light_sensitive(self, enabled: bool) -> None:
         """Record a smart-light command."""
         self.light_sensitive_calls.append(enabled)
+
+    def set_attribute(self, attr: object, value: bool) -> None:
+        """Record a generic attribute command without changing readback."""
+        self.attribute_calls.append((attr, value))
 
     def register_update(self, _update: object) -> None:
         """Satisfy MideaEntity's callback surface."""
@@ -173,6 +188,68 @@ class ModelControlTests(unittest.TestCase):
         self.assertTrue(supports_model("220F4047", config, 8))
         self.assertFalse(supports_model("220F4047", config, 1))
         self.assertFalse(supports_model("other", config, 8))
+
+    def test_supports_model_exact_exclusion_is_reversible(self) -> None:
+        """An unverified control is hidden only for the exact device pair."""
+        config = {
+            "excluded_models": ["220F4047"],
+            "excluded_subtypes": [8],
+        }
+
+        self.assertFalse(supports_model("220F4047", config, 8))
+        self.assertTrue(supports_model("220F4047", config, 1))
+        self.assertTrue(supports_model("other", config, 8))
+
+    def test_unverified_controls_are_hidden_for_exact_model(self) -> None:
+        """Only the verified no-person control remains visible by default."""
+        entities = cast("dict", MIDEA_DEVICES[0xAC]["entities"])
+
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.cool_hot_sense], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.power_saving], 8),
+        )
+        self.assertTrue(
+            supports_model(
+                "220F4047",
+                entities[ACAttributes.nobody_energy_save_tag],
+                8,
+            ),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.eco_mode], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.swing_horizontal], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.swing_vertical], 8),
+        )
+        self.assertTrue(supports_model("other", entities[ACAttributes.eco_mode], 8))
+
+    def test_swing_feature_is_hidden_only_for_exact_model(self) -> None:
+        """The broken climate swing control is absent only on the target unit."""
+        target = FakeACDevice(power=True)
+        target_entity = MideaACClimate(
+            cast("MideaACDevice", target),
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertFalse(
+            target_entity.supported_features & ClimateEntityFeature.SWING_MODE,
+        )
+
+        other = FakeACDevice(power=True)
+        other.model = "other"
+        other_entity = MideaACClimate(
+            cast("MideaACDevice", other),
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertTrue(
+            other_entity.supported_features & ClimateEntityFeature.SWING_MODE,
+        )
 
     def test_person_airflow_select_applies_only_while_powered(self) -> None:
         """Off-device choices persist without writing; powered choices write once."""
@@ -330,6 +407,49 @@ class ModelControlTests(unittest.TestCase):
         entity.turn_on()
         self.assertEqual(device.light_sensitive_calls, [False, True])
 
+    def test_screen_switch_holds_requested_state_until_primary_readback(self) -> None:
+        """A stale C0 value cannot immediately undo the absolute display command."""
+        device = FakeACDevice(power=True)
+        entity = MideaScreenDisplaySwitch(
+            cast("MideaACDevice", device),
+            ACAttributes.screen_display,
+        )
+        entity.hass = SimpleNamespace()
+
+        entity.turn_off()
+        self.assertFalse(entity.is_on)
+        self.assertEqual(
+            device.attribute_calls,
+            [(ACAttributes.screen_display, False)],
+        )
+
+        with patch.object(entity, "schedule_update_if_running") as schedule:
+            entity.update_state(
+                {ACAttributes.screen_display_alternate.value: False},
+            )
+        schedule.assert_called_once_with()
+        self.assertFalse(entity.is_on)
+
+        device.values[ACAttributes.screen_display.value] = False
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({ACAttributes.screen_display.value: False})
+        self.assertIsNone(entity._pending_state)
+
+    @staticmethod
+    def test_smart_light_switch_refreshes_from_raw_sensor_update() -> None:
+        """A raw device update schedules the synthetic control entity once."""
+        device = FakeACDevice(power=False)
+        entity = MideaLightSensitiveSwitch(
+            as_midea_device(device),
+            LIGHT_SENSITIVE_CONTROL,
+        )
+        entity.hass = SimpleNamespace()
+
+        with patch.object(entity, "schedule_update_if_running") as schedule:
+            entity.update_state({ACAttributes.light_sensitive.value: 0})
+
+        schedule.assert_called_once_with()
+
     def test_actual_person_airflow_mapping(self) -> None:
         """Avoid wins if a malformed response reports both mutually exclusive flags."""
         device = FakeACDevice(power=True)
@@ -352,6 +472,8 @@ class FakeRegistry:
                 disabled_by=er.RegistryEntryDisabler.INTEGRATION,
             ),
             "switch.123_prompt_tone": SimpleNamespace(disabled_by=None),
+            "switch.123_swing_horizontal": SimpleNamespace(disabled_by=None),
+            "switch.123_swing_vertical": SimpleNamespace(disabled_by=None),
         }
         self.updated: dict[str, er.RegistryEntryDisabler | None] = {}
 
@@ -399,9 +521,52 @@ class RegistryReconciliationTests(unittest.TestCase):
         """Only integration-managed disables are reversed."""
         registry = FakeRegistry()
         config_entry = SimpleNamespace(
-            options={CONF_SENSORS: [], CONF_SWITCHES: [ACAttributes.sound.value]},
+            options={
+                CONF_SENSORS: [],
+                CONF_SWITCHES: [
+                    ACAttributes.sound.value,
+                    ACAttributes.swing_horizontal.value,
+                    ACAttributes.swing_vertical.value,
+                ],
+            },
         )
         device = FakeACDevice(power=False)
+
+        with patch(
+            "midea_ac_lan.er.async_get",
+            return_value=registry,
+        ):
+            _reconcile_optional_entity_registry(
+                Mock(),
+                config_entry,
+                as_midea_device(device),
+            )
+
+        self.assertEqual(
+            registry.updated,
+            {
+                "switch.123_sound": None,
+                "switch.123_prompt_tone": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_swing_horizontal": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_swing_vertical": er.RegistryEntryDisabler.INTEGRATION,
+            },
+        )
+
+    def test_supported_selected_controls_stay_enabled_for_other_model(self) -> None:
+        """Model exclusions never disable the same selected controls elsewhere."""
+        registry = FakeRegistry()
+        config_entry = SimpleNamespace(
+            options={
+                CONF_SENSORS: [],
+                CONF_SWITCHES: [
+                    ACAttributes.sound.value,
+                    ACAttributes.swing_horizontal.value,
+                    ACAttributes.swing_vertical.value,
+                ],
+            },
+        )
+        device = FakeACDevice(power=False)
+        device.model = "other"
 
         with patch(
             "midea_ac_lan.er.async_get",

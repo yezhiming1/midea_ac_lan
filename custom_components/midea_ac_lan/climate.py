@@ -52,7 +52,13 @@ from midealan.devices.cf import MideaCFDevice
 from midealan.devices.fb import DeviceAttributes as FBAttributes
 from midealan.devices.fb import MideaFBDevice
 
-from .const import DEVICES, DOMAIN, FanSpeed
+from .const import (
+    DEVICES,
+    DOMAIN,
+    MODEL_220F4047,
+    SUBTYPE_220F4047,
+    FanSpeed,
+)
 from .midea_devices import MIDEA_DEVICES
 from .midea_entity import MideaEntity
 
@@ -368,12 +374,17 @@ class MideaACClimate(MideaClimate):
             self._customize_preset_modes = wanted_p
 
     def _capability_swing(self) -> bool:
-        """Whether swing is available (customize > B5 capability > default).
+        """Whether swing is available (known incompatibility > customize > B5).
 
         Returns:
             ``True`` when the swing control should be exposed.
 
         """
+        if (
+            self._device.model == MODEL_220F4047
+            and self._device.subtype == SUBTYPE_220F4047
+        ):
+            return False
         if self._customize_swing is not None:
             return self._customize_swing
         caps = getattr(self._device, "capabilities", {})

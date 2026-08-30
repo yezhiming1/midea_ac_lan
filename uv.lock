@@ -2610,7 +2610,7 @@ dev = [
     { name = "homeassistant", marker = "python_full_version == '3.13.*'", specifier = "==2024.12.1" },
     { name = "homeassistant", marker = "python_full_version >= '3.14.2'", specifier = "==2026.3.1" },
     { name = "josepy", marker = "python_full_version == '3.12.*'", specifier = "==1.14.0" },
-    { name = "midea-lan", path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.30-py3-none-any.whl" },
+    { name = "midea-lan", path = "custom_components/midea_ac_lan/_vendor/midea_lan-0.0.2-py3-none-any.whl" },
     { name = "mypy", specifier = "==2.3.1" },
     { name = "pre-commit", specifier = "==4.6.2" },
     { name = "pydantic", specifier = "==2.13.4" },
@@ -2625,8 +2625,8 @@ run = [
 
 [[package]]
 name = "midea-lan"
-version = "2026.8.30"
-source = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.30-py3-none-any.whl" }
+version = "0.0.2"
+source = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-0.0.2-py3-none-any.whl" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp", version = "3.9.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
@@ -2640,7 +2640,7 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { filename = "midea_lan-2026.8.30-py3-none-any.whl", hash = "sha256:431d0ded766868aa13a4760e7f798d8fb053ea692c2c1d9380345d54d719ae2e" },
+    { filename = "midea_lan-0.0.2-py3-none-any.whl", hash = "sha256:13d3d0181e892d7e264e046a6262310454bf8b71227fcbd1c1ffbf603366296e" },
 ]
 
 [package.metadata]

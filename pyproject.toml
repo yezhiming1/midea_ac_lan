@@ -43,7 +43,7 @@ dev = [
   # HA 2024.4 imports josepy.ComparableX509, removed by josepy 2.x.
   "josepy==1.14.0 ; python_version == '3.12'",
   # Static analysis imports the same checked-in wheel used by the integration.
-  "midea-lan==2026.8.30",
+  "midea-lan==0.0.2",
 ]
 
 # Optional runtime extras for the local `uv run hass` dev/debug environment
@@ -64,7 +64,7 @@ run = [
 package = false
 
 [tool.uv.sources]
-midea-lan = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-2026.8.30-py3-none-any.whl" }
+midea-lan = { path = "custom_components/midea_ac_lan/_vendor/midea_lan-0.0.2-py3-none-any.whl" }
 
 # ----------------------------------------------------------------------------
 # ruff configuration (migrated from the former ruff.toml).
