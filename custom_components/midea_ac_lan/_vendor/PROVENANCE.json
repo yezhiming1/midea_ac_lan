@@ -2,9 +2,9 @@
   "name": "midea-lan",
   "version": "0.0.2",
   "source": "local:midea-lan-2026.8.30-worktree",
-  "commit": "e9a138a41064f316503059b91f1ea8b9a558256f",
+  "commit": "2ae9f3f391ed36f509080ec7517c5ef62c10df46",
   "wheel": "midea_lan-0.0.2-py3-none-any.whl",
-  "sha256": "2626c699f4f86adb3247d292fe628a091a781da1f853451e027de25a21483a16",
+  "sha256": "9fdfa39ca80239d9b755124ee6186f33ebe5e0022653950cc2bc21c16104496f",
   "license": "MIT",
   "license_file": "MIDEA_LAN_LICENSE.txt"
 }
