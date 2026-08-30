@@ -913,6 +913,9 @@
       "natural_wind": {
         "name": "Natural Wind"
       },
+      "nobody_energy_save": {
+        "name": "Nobody Energy Saving"
+      },
       "night_light": {
         "name": "Night Light"
       },

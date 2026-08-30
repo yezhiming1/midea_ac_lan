@@ -913,6 +913,9 @@
       "natural_wind": {
         "name": "自然风"
       },
+      "nobody_energy_save": {
+        "name": "人走节能"
+      },
       "night_light": {
         "name": "夜灯"
       },

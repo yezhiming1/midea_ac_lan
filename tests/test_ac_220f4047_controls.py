@@ -29,6 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from midea_ac_lan import _reconcile_optional_entity_registry
 from midealan.devices.ac import (
     DeviceAttributes as ACAttributes,
+    MideaACDevice,
 )
 
 from midea_ac_lan.const import (
@@ -41,7 +42,7 @@ from midea_ac_lan.const import (
 )
 from midea_ac_lan.midea_devices import MIDEA_DEVICES
 from midea_ac_lan.select import MideaPersonAirflowSelect
-from midea_ac_lan.switch import MideaLightSensitiveSwitch
+from midea_ac_lan.switch import MideaLightSensitiveSwitch, MideaScreenDisplaySwitch
 
 
 class FakeACDevice:
@@ -63,15 +64,22 @@ class FakeACDevice:
             ACAttributes.wind_straight.value: False,
             ACAttributes.wind_avoid.value: False,
             ACAttributes.light_sensitive.value: 3,
+            ACAttributes.nobody_energy_save_tag.value: 0,
+            ACAttributes.screen_display.value: True,
+            ACAttributes.screen_display_alternate.value: False,
         }
         self.attributes = {
             ACAttributes.power: power,
             ACAttributes.wind_straight: False,
             ACAttributes.wind_avoid: False,
             ACAttributes.light_sensitive: 3,
+            ACAttributes.nobody_energy_save_tag: 0,
+            ACAttributes.screen_display: True,
+            ACAttributes.screen_display_alternate: False,
         }
         self.person_airflow_calls: list[str] = []
         self.light_sensitive_calls: list[bool] = []
+        self.attribute_calls: list[tuple[object, bool]] = []
 
     def get_attribute(self, attribute: object) -> bool | int | None:
         """Return an attribute by enum or string key.
@@ -91,6 +99,10 @@ class FakeACDevice:
     def set_light_sensitive(self, enabled: bool) -> None:
         """Record a smart-light command."""
         self.light_sensitive_calls.append(enabled)
+
+    def set_attribute(self, attr: object, value: bool) -> None:
+        """Record a generic attribute command without changing readback."""
+        self.attribute_calls.append((attr, value))
 
     def register_update(self, _update: object) -> None:
         """Satisfy MideaEntity's callback surface."""
@@ -186,15 +198,22 @@ class ModelControlTests(unittest.TestCase):
         self.assertTrue(supports_model("220F4047", config, 1))
         self.assertTrue(supports_model("other", config, 8))
 
-    def test_app_feature_controls_match_exact_model(self) -> None:
-        """Smart temperature and power saving replace the unrelated ECO control."""
+    def test_unverified_controls_are_hidden_for_exact_model(self) -> None:
+        """Only the verified no-person control remains visible by default."""
         entities = cast("dict", MIDEA_DEVICES[0xAC]["entities"])
 
-        self.assertTrue(
+        self.assertFalse(
             supports_model("220F4047", entities[ACAttributes.cool_hot_sense], 8),
         )
-        self.assertTrue(
+        self.assertFalse(
             supports_model("220F4047", entities[ACAttributes.power_saving], 8),
+        )
+        self.assertTrue(
+            supports_model(
+                "220F4047",
+                entities[ACAttributes.nobody_energy_save_tag],
+                8,
+            ),
         )
         self.assertFalse(
             supports_model("220F4047", entities[ACAttributes.eco_mode], 8),
@@ -356,6 +375,34 @@ class ModelControlTests(unittest.TestCase):
         entity.turn_off()
         entity.turn_on()
         self.assertEqual(device.light_sensitive_calls, [False, True])
+
+    def test_screen_switch_holds_requested_state_until_primary_readback(self) -> None:
+        """A stale C0 value cannot immediately undo the absolute display command."""
+        device = FakeACDevice(power=True)
+        entity = MideaScreenDisplaySwitch(
+            cast("MideaACDevice", device),
+            ACAttributes.screen_display,
+        )
+        entity.hass = SimpleNamespace()
+
+        entity.turn_off()
+        self.assertFalse(entity.is_on)
+        self.assertEqual(
+            device.attribute_calls,
+            [(ACAttributes.screen_display, False)],
+        )
+
+        with patch.object(entity, "schedule_update_if_running") as schedule:
+            entity.update_state(
+                {ACAttributes.screen_display_alternate.value: False},
+            )
+        schedule.assert_called_once_with()
+        self.assertFalse(entity.is_on)
+
+        device.values[ACAttributes.screen_display.value] = False
+        with patch.object(entity, "schedule_update_if_running"):
+            entity.update_state({ACAttributes.screen_display.value: False})
+        self.assertIsNone(entity._pending_state)
 
     @staticmethod
     def test_smart_light_switch_refreshes_from_raw_sensor_update() -> None:

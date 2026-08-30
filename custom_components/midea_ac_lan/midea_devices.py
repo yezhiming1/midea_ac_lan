@@ -478,7 +478,8 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "icon": "mdi:thermometer-auto",
                 "models": ["220F4047"],
                 "subtypes": [8],
-                "default": True,
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.eco_mode: {
                 "type": Platform.SWITCH,
@@ -495,7 +496,8 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "icon": "mdi:leaf",
                 "models": ["220F4047"],
                 "subtypes": [8],
-                "default": True,
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.frost_protect: {
                 "type": Platform.SWITCH,
@@ -600,6 +602,15 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "models": ["220F4047"],
                 "default": True,
                 "raw_value": True,
+            },
+            ACAttributes.nobody_energy_save_tag: {
+                "type": Platform.SWITCH,
+                "translation_key": "nobody_energy_save",
+                "name": "Nobody Energy Saving",
+                "icon": "mdi:home-export-outline",
+                "models": ["220F4047"],
+                "subtypes": [8],
+                "default": True,
             },
             LIGHT_SENSITIVE_CONTROL: {
                 "type": Platform.SWITCH,
