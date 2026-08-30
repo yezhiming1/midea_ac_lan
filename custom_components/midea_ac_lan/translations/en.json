@@ -69,6 +69,36 @@
       "bar_door_overtime": {
         "name": "Bar Door Overtime"
       },
+      "ca_protocol_acme_freezing_mode": {
+        "name": "Protocol bit: acme_freezing_mode"
+      },
+      "ca_protocol_code_mode": {
+        "name": "Protocol bit: code_mode"
+      },
+      "ca_protocol_energy_saving_mode": {
+        "name": "Protocol bit: energy_saving_mode"
+      },
+      "ca_protocol_flood_light": {
+        "name": "Protocol bit: flood_light"
+      },
+      "ca_protocol_freezing_ice_machine_power": {
+        "name": "Protocol bit: freezing_ice_machine_power"
+      },
+      "ca_protocol_freezing_mode": {
+        "name": "Protocol bit: freezing_mode"
+      },
+      "ca_protocol_holiday_mode": {
+        "name": "Protocol bit: holiday_mode"
+      },
+      "ca_protocol_moisturize_mode": {
+        "name": "Protocol bit: moisturize_mode"
+      },
+      "ca_protocol_preservation_mode": {
+        "name": "Protocol bit: preservation_mode"
+      },
+      "ca_protocol_smart_mode": {
+        "name": "Protocol bit: smart_mode"
+      },
       "bathing_working": {
         "name": "Bathing Working Status"
       },

@@ -1,5 +1,16 @@
 # Changelog
 
+## V0.0.5 (2026-08-31)
+
+### Features
+
+* **refrigerator:** expose ten neutral read-only protocol probes only for model 310A2111 subtype 56 so App functions can be mapped without sending device commands
+
+### Bug Fixes
+
+* **refrigerator:** hide the invalid right-flex-zone temperature entities only for model 310A2111 subtype 56
+* **dependency:** bundle midea-lan 0.0.3 with exact source provenance and CA diagnostic state decoding
+
 ## V0.0.4 (2026-08-30)
 
 ### Bug Fixes

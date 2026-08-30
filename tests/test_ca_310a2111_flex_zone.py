@@ -28,6 +28,22 @@ from midea_ac_lan.sensor import (
     MideaSensor,
     _create_sensor,
 )
+from midea_ac_lan.const import supports_model
+from midea_ac_lan.midea_devices import MIDEA_DEVICES
+
+
+PROTOCOL_DIAGNOSTIC_ATTRIBUTES = (
+    CAAttributes.code_mode,
+    CAAttributes.freezing_mode,
+    CAAttributes.smart_mode,
+    CAAttributes.energy_saving_mode,
+    CAAttributes.holiday_mode,
+    CAAttributes.moisturize_mode,
+    CAAttributes.preservation_mode,
+    CAAttributes.acme_freezing_mode,
+    CAAttributes.flood_light,
+    CAAttributes.freezing_ice_machine_power,
+)
 
 
 class FakeRefrigeratorDevice:
@@ -160,6 +176,50 @@ class RefrigeratorFlexZoneModeTests(unittest.TestCase):
                 )
                 states = document["entity"]["sensor"]["variable_mode"]["state"]
                 self.assertEqual(states, labels)
+
+    def test_diagnostics_and_right_zone_cleanup_are_exact_model_gated(self) -> None:
+        """Only the target refrigerator gains probes and loses the invalid zone."""
+        entities = cast("dict", MIDEA_DEVICES[0xCA]["entities"])
+
+        for attribute in PROTOCOL_DIAGNOSTIC_ATTRIBUTES:
+            with self.subTest(attribute=attribute):
+                config = entities[attribute]
+                self.assertEqual(config["type"], Platform.BINARY_SENSOR)
+                self.assertTrue(config["default"])
+                self.assertTrue(config["raw_value"])
+                self.assertEqual(config["required_attribute"], attribute)
+                self.assertNotIn("set_message", config)
+                self.assertTrue(supports_model("310A2111", config, 56))
+                self.assertFalse(supports_model("310A2111", config, 1))
+                self.assertFalse(supports_model("other", config, 56))
+
+        for attribute in (
+            CAAttributes.right_flex_zone_actual_temp,
+            CAAttributes.right_flex_zone_setting_temp,
+        ):
+            with self.subTest(attribute=attribute):
+                config = entities[attribute]
+                self.assertFalse(supports_model("310A2111", config, 56))
+                self.assertTrue(supports_model("310A2111", config, 1))
+                self.assertTrue(supports_model("other", config, 56))
+
+    def test_diagnostic_probes_have_neutral_english_and_chinese_labels(self) -> None:
+        """Probe labels expose protocol keys without claiming App semantics."""
+        translations_root = CUSTOM_COMPONENTS_ROOT / "midea_ac_lan" / "translations"
+        expected_prefixes = {
+            "en.json": "Protocol bit: ",
+            "zh-Hans.json": "协议位\uff1a",
+        }
+
+        for filename, prefix in expected_prefixes.items():
+            with self.subTest(filename=filename):
+                document = json.loads(
+                    (translations_root / filename).read_text(encoding="utf-8"),
+                )
+                labels = document["entity"]["binary_sensor"]
+                for attribute in PROTOCOL_DIAGNOSTIC_ATTRIBUTES:
+                    key = f"ca_protocol_{attribute.value}"
+                    self.assertEqual(labels[key]["name"], f"{prefix}{attribute.value}")
 
 
 if __name__ == "__main__":

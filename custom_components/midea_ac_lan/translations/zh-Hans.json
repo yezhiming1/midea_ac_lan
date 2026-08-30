@@ -69,6 +69,36 @@
       "bar_door_overtime": {
         "name": "吧台门超时"
       },
+      "ca_protocol_acme_freezing_mode": {
+        "name": "协议位：acme_freezing_mode"
+      },
+      "ca_protocol_code_mode": {
+        "name": "协议位：code_mode"
+      },
+      "ca_protocol_energy_saving_mode": {
+        "name": "协议位：energy_saving_mode"
+      },
+      "ca_protocol_flood_light": {
+        "name": "协议位：flood_light"
+      },
+      "ca_protocol_freezing_ice_machine_power": {
+        "name": "协议位：freezing_ice_machine_power"
+      },
+      "ca_protocol_freezing_mode": {
+        "name": "协议位：freezing_mode"
+      },
+      "ca_protocol_holiday_mode": {
+        "name": "协议位：holiday_mode"
+      },
+      "ca_protocol_moisturize_mode": {
+        "name": "协议位：moisturize_mode"
+      },
+      "ca_protocol_preservation_mode": {
+        "name": "协议位：preservation_mode"
+      },
+      "ca_protocol_smart_mode": {
+        "name": "协议位：smart_mode"
+      },
       "bathing_working": {
         "name": "淋浴工作状态"
       },
