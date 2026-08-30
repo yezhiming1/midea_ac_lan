@@ -789,7 +789,12 @@
         "name": "Humidity"
       },
       "variable_mode": {
-        "name": "Variable Mode"
+        "name": "Flex Zone Mode",
+        "state": {
+          "mother_infant": "Mother & Infant",
+          "treasure": "Treasure",
+          "zero_degree": "Zero Degree"
+        }
       },
       "compressor_frequency": {
         "name": "Compressor Frequency"
