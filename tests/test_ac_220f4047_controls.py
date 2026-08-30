@@ -472,6 +472,8 @@ class FakeRegistry:
                 disabled_by=er.RegistryEntryDisabler.INTEGRATION,
             ),
             "switch.123_prompt_tone": SimpleNamespace(disabled_by=None),
+            "switch.123_swing_horizontal": SimpleNamespace(disabled_by=None),
+            "switch.123_swing_vertical": SimpleNamespace(disabled_by=None),
         }
         self.updated: dict[str, er.RegistryEntryDisabler | None] = {}
 
@@ -519,9 +521,52 @@ class RegistryReconciliationTests(unittest.TestCase):
         """Only integration-managed disables are reversed."""
         registry = FakeRegistry()
         config_entry = SimpleNamespace(
-            options={CONF_SENSORS: [], CONF_SWITCHES: [ACAttributes.sound.value]},
+            options={
+                CONF_SENSORS: [],
+                CONF_SWITCHES: [
+                    ACAttributes.sound.value,
+                    ACAttributes.swing_horizontal.value,
+                    ACAttributes.swing_vertical.value,
+                ],
+            },
         )
         device = FakeACDevice(power=False)
+
+        with patch(
+            "midea_ac_lan.er.async_get",
+            return_value=registry,
+        ):
+            _reconcile_optional_entity_registry(
+                Mock(),
+                config_entry,
+                as_midea_device(device),
+            )
+
+        self.assertEqual(
+            registry.updated,
+            {
+                "switch.123_sound": None,
+                "switch.123_prompt_tone": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_swing_horizontal": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_swing_vertical": er.RegistryEntryDisabler.INTEGRATION,
+            },
+        )
+
+    def test_supported_selected_controls_stay_enabled_for_other_model(self) -> None:
+        """Model exclusions never disable the same selected controls elsewhere."""
+        registry = FakeRegistry()
+        config_entry = SimpleNamespace(
+            options={
+                CONF_SENSORS: [],
+                CONF_SWITCHES: [
+                    ACAttributes.sound.value,
+                    ACAttributes.swing_horizontal.value,
+                    ACAttributes.swing_vertical.value,
+                ],
+            },
+        )
+        device = FakeACDevice(power=False)
+        device.model = "other"
 
         with patch(
             "midea_ac_lan.er.async_get",

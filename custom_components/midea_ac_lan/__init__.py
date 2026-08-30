@@ -346,6 +346,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 config_entry,
                 ALL_PLATFORM,
             )
+            # Reconcile again after platforms finish registering entities.  The
+            # pre-forward pass re-enables newly selected entries in time for
+            # setup; this post-forward pass makes unsupported legacy entries
+            # remain integration-disabled after platform reconciliation.
+            _reconcile_optional_entity_registry(hass, config_entry, device)
         except Exception:
             _device_store(hass).pop(device_id, None)
             _close_device(device)
