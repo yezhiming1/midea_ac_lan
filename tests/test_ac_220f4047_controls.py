@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 CUSTOM_COMPONENTS_ROOT = Path(__file__).parents[1] / "custom_components"
 sys.path.insert(0, str(CUSTOM_COMPONENTS_ROOT))
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.const import CONF_SENSORS, CONF_SWITCHES
 from homeassistant.helpers import entity_registry as er
 
@@ -40,6 +41,7 @@ from midea_ac_lan.const import (
     PERSON_AIRFLOW_TOWARD,
     supports_model,
 )
+from midea_ac_lan.climate import MideaACClimate
 from midea_ac_lan.midea_devices import MIDEA_DEVICES
 from midea_ac_lan.select import MideaPersonAirflowSelect
 from midea_ac_lan.switch import MideaLightSensitiveSwitch, MideaScreenDisplaySwitch
@@ -218,7 +220,36 @@ class ModelControlTests(unittest.TestCase):
         self.assertFalse(
             supports_model("220F4047", entities[ACAttributes.eco_mode], 8),
         )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.swing_horizontal], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.swing_vertical], 8),
+        )
         self.assertTrue(supports_model("other", entities[ACAttributes.eco_mode], 8))
+
+    def test_swing_feature_is_hidden_only_for_exact_model(self) -> None:
+        """The broken climate swing control is absent only on the target unit."""
+        target = FakeACDevice(power=True)
+        target_entity = MideaACClimate(
+            target,
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertFalse(
+            target_entity.supported_features & ClimateEntityFeature.SWING_MODE,
+        )
+
+        other = FakeACDevice(power=True)
+        other.model = "other"
+        other_entity = MideaACClimate(
+            other,
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertTrue(
+            other_entity.supported_features & ClimateEntityFeature.SWING_MODE,
+        )
 
     def test_person_airflow_select_applies_only_while_powered(self) -> None:
         """Off-device choices persist without writing; powered choices write once."""

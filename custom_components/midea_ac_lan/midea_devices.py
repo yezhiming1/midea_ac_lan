@@ -568,12 +568,16 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "translation_key": "swing_horizontal",
                 "name": "Swing Horizontal",
                 "icon": "mdi:arrow-split-vertical",
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.swing_vertical: {
                 "type": Platform.SWITCH,
                 "translation_key": "swing_vertical",
                 "name": "Swing Vertical",
                 "icon": "mdi:arrow-split-horizontal",
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.anion: {
                 "type": Platform.SWITCH,
