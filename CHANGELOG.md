@@ -1,5 +1,13 @@
 # Changelog
 
+## V0.0.3 (2026-08-30)
+
+### Bug Fixes
+
+* **ac:** hide unverified dry, self-clean and current-energy entities only for model 220F4047 subtype 8
+* **climate:** remove generic preset controls for model 220F4047 subtype 8 while preserving other models
+* **registry:** reversibly disable legacy rows for newly hidden model-specific entities
+
 ## V0.0.2 (2026-08-30)
 
 ### Features

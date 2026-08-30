@@ -24,6 +24,7 @@ CUSTOM_COMPONENTS_ROOT = Path(__file__).parents[1] / "custom_components"
 sys.path.insert(0, str(CUSTOM_COMPONENTS_ROOT))
 
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate.const import PRESET_NONE
 from homeassistant.const import CONF_SENSORS, CONF_SWITCHES
 from homeassistant.helpers import entity_registry as er
 
@@ -226,7 +227,29 @@ class ModelControlTests(unittest.TestCase):
         self.assertFalse(
             supports_model("220F4047", entities[ACAttributes.swing_vertical], 8),
         )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.dry], 8),
+        )
+        self.assertFalse(
+            supports_model("220F4047", entities[ACAttributes.self_clean], 8),
+        )
+        self.assertFalse(
+            supports_model(
+                "220F4047",
+                entities[ACAttributes.current_energy_consumption],
+                8,
+            ),
+        )
         self.assertTrue(supports_model("other", entities[ACAttributes.eco_mode], 8))
+        self.assertTrue(supports_model("other", entities[ACAttributes.dry], 8))
+        self.assertTrue(supports_model("other", entities[ACAttributes.self_clean], 8))
+        self.assertTrue(
+            supports_model(
+                "other",
+                entities[ACAttributes.current_energy_consumption],
+                8,
+            ),
+        )
 
     def test_swing_feature_is_hidden_only_for_exact_model(self) -> None:
         """The broken climate swing control is absent only on the target unit."""
@@ -249,6 +272,31 @@ class ModelControlTests(unittest.TestCase):
         )
         self.assertTrue(
             other_entity.supported_features & ClimateEntityFeature.SWING_MODE,
+        )
+
+    def test_preset_feature_is_hidden_only_for_exact_model(self) -> None:
+        """Generic presets stay hidden when the target unit lacks live proof."""
+        target = FakeACDevice(power=True)
+        target_entity = MideaACClimate(
+            cast("MideaACDevice", target),
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertEqual(target_entity.preset_modes, [PRESET_NONE])
+        self.assertFalse(
+            target_entity.supported_features & ClimateEntityFeature.PRESET_MODE,
+        )
+
+        other = FakeACDevice(power=True)
+        other.model = "other"
+        other_entity = MideaACClimate(
+            cast("MideaACDevice", other),
+            "climate",
+            SimpleNamespace(options={}),
+        )
+        self.assertNotEqual(other_entity.preset_modes, [PRESET_NONE])
+        self.assertTrue(
+            other_entity.supported_features & ClimateEntityFeature.PRESET_MODE,
         )
 
     def test_person_airflow_select_applies_only_while_powered(self) -> None:
@@ -463,10 +511,10 @@ class ModelControlTests(unittest.TestCase):
 
 
 class FakeRegistry:
-    """Entity registry double exposing only two pre-existing AC entities."""
+    """Entity registry double exposing representative pre-existing AC entities."""
 
     def __init__(self) -> None:
-        """Initialize two registry entries with opposite disabled states."""
+        """Initialize registry entries with enabled and disabled states."""
         self.entries = {
             "switch.123_sound": SimpleNamespace(
                 disabled_by=er.RegistryEntryDisabler.INTEGRATION,
@@ -474,6 +522,11 @@ class FakeRegistry:
             "switch.123_prompt_tone": SimpleNamespace(disabled_by=None),
             "switch.123_swing_horizontal": SimpleNamespace(disabled_by=None),
             "switch.123_swing_vertical": SimpleNamespace(disabled_by=None),
+            "switch.123_dry": SimpleNamespace(disabled_by=None),
+            "switch.123_self_clean": SimpleNamespace(disabled_by=None),
+            "sensor.123_current_energy_consumption": SimpleNamespace(
+                disabled_by=None,
+            ),
         }
         self.updated: dict[str, er.RegistryEntryDisabler | None] = {}
 
@@ -522,11 +575,13 @@ class RegistryReconciliationTests(unittest.TestCase):
         registry = FakeRegistry()
         config_entry = SimpleNamespace(
             options={
-                CONF_SENSORS: [],
+                CONF_SENSORS: [ACAttributes.current_energy_consumption.value],
                 CONF_SWITCHES: [
                     ACAttributes.sound.value,
                     ACAttributes.swing_horizontal.value,
                     ACAttributes.swing_vertical.value,
+                    ACAttributes.dry.value,
+                    ACAttributes.self_clean.value,
                 ],
             },
         )
@@ -549,6 +604,11 @@ class RegistryReconciliationTests(unittest.TestCase):
                 "switch.123_prompt_tone": er.RegistryEntryDisabler.INTEGRATION,
                 "switch.123_swing_horizontal": er.RegistryEntryDisabler.INTEGRATION,
                 "switch.123_swing_vertical": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_dry": er.RegistryEntryDisabler.INTEGRATION,
+                "switch.123_self_clean": er.RegistryEntryDisabler.INTEGRATION,
+                "sensor.123_current_energy_consumption": (
+                    er.RegistryEntryDisabler.INTEGRATION
+                ),
             },
         )
 
@@ -557,11 +617,13 @@ class RegistryReconciliationTests(unittest.TestCase):
         registry = FakeRegistry()
         config_entry = SimpleNamespace(
             options={
-                CONF_SENSORS: [],
+                CONF_SENSORS: [ACAttributes.current_energy_consumption.value],
                 CONF_SWITCHES: [
                     ACAttributes.sound.value,
                     ACAttributes.swing_horizontal.value,
                     ACAttributes.swing_vertical.value,
+                    ACAttributes.dry.value,
+                    ACAttributes.self_clean.value,
                 ],
             },
         )
