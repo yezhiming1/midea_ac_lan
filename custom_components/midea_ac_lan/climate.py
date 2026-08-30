@@ -419,12 +419,17 @@ class MideaACClimate(MideaClimate):
 
     @property
     def preset_modes(self) -> list[str]:
-        """preset_modes: customize > B5 capabilities > default full set.
+        """preset_modes: known incompatibility > customize > B5 capabilities.
 
         B5 only declares eco and turbo (and heat implies away). comfort and
         sleep have no capability flag, so they are kept unless overridden via
         the customize ``preset_modes`` option.
         """
+        if (
+            self._device.model == MODEL_220F4047
+            and self._device.subtype == SUBTYPE_220F4047
+        ):
+            return [PRESET_NONE]
         all_presets = [
             PRESET_NONE,
             PRESET_COMFORT,

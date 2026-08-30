@@ -470,6 +470,8 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "translation_key": "dry",
                 "name": "Dry",
                 "icon": "mdi:air-filter",
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.cool_hot_sense: {
                 "type": Platform.SWITCH,
@@ -596,6 +598,8 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "translation_key": "self_clean",
                 "name": "Self Clean",
                 "icon": "mdi:air-filter",
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.light_sensitive: {
                 "type": Platform.BINARY_SENSOR,
@@ -718,6 +722,8 @@ MIDEA_DEVICES: dict[int, dict[str, dict[str, Any] | str]] = {
                 "device_class": SensorDeviceClass.ENERGY,
                 "unit": UnitOfEnergy.KILO_WATT_HOUR,
                 "state_class": SensorStateClass.TOTAL_INCREASING,
+                "excluded_models": ["220F4047"],
+                "excluded_subtypes": [8],
             },
             ACAttributes.realtime_power: {
                 "type": Platform.SENSOR,
