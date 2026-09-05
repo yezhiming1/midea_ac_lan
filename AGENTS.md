@@ -58,15 +58,35 @@ scripts/setup.sh        # uv sync + install pre-commit/commit-msg hooks
 scripts/run.sh          # run Home Assistant locally with ./config, integration on PYTHONPATH (creates ./config on first run)
 ```
 
-Linting / checks (all enforced in CI via pre-commit — there is no separate test suite in this repo):
+Linting and functional tests:
 
 ```bash
-uv run pre-commit run --all-files   # run everything: ruff, ruff-format, mypy, pylint, codespell, commitlint, prettier
-uv run ruff check .                 # lint (config: ruff.toml, lint.select = ALL, target py312)
-uv run ruff format .                # format
-scripts/mypy.sh                     # mypy (config: mypy.ini) — note: NOT `mypy .` directly
-uv run pylint custom_components     # pylint (config: pylintrc)
+uv run pre-commit run --all-files
+uv run python -m unittest discover -s tests -p "test_*.py" -v
+uv run ruff check .
+uv run ruff format .
+scripts/mypy.sh                     # use this wrapper, not `mypy .`
+uv run pylint custom_components
 ```
+
+The repository uses `unittest` modules under `tests/`. Three
+integration-specific modules cover the model-specific AC controls, refrigerator
+flex-zone/diagnostic behavior, and the integrity plus clean-interpreter import of
+the bundled `midea-lan` wheel; the CI-routing module verifies the path
+classifier. Keep new functional behavior in this suite; pytest is not a project
+dependency.
+
+Pull-request CI is path-routed by `scripts/ci_changed_paths.py`:
+
+- ordinary README, changelog, license, and `doc/` changes run pre-commit only
+  for changed files on Ubuntu;
+- integration source changes run full pre-commit, the functional suite on Windows,
+  Ubuntu, and macOS, plus HACS and hassfest;
+- bundled wheel or provenance changes use the same cross-platform and HA validation;
+- tests, CI, scripts, and Python toolchain changes run full pre-commit and the
+  cross-platform functional suite; routing-contract changes also run HA validation;
+- HA metadata runs HACS and hassfest; unknown or empty path input fails safe into
+  both full validation lanes.
 
 Dependencies (including the per-Python `homeassistant==` pins) live in `pyproject.toml` and are resolved by environment markers; `uv sync` installs the right set for your Python. There are no `requirements-dev-3.1x.txt` files anymore.
 

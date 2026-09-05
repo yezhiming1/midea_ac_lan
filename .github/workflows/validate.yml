@@ -8,9 +8,35 @@ on:
 permissions: {}
 
 jobs:
+  changes:
+    name: Classify changed paths
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      run_ha_validation: ${{ steps.scope.outputs.run_ha_validation }}
+    steps:
+      - uses: "actions/checkout@v7"
+        with:
+          fetch-depth: 0
+
+      - name: Classify validation scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          git diff --name-only -z --diff-filter=ACMRTD
+          "$BASE_SHA" "$HEAD_SHA" |
+          python3 scripts/ci_changed_paths.py --github-output "$GITHUB_OUTPUT"
+
   validate:
     name: HASS and Hassfest Validation
+    needs: changes
+    if: needs.changes.outputs.run_ha_validation == 'true'
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
     steps:
       - uses: "actions/checkout@v7"
 
