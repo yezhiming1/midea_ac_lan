@@ -1,15 +1,86 @@
 """Tests for pull-request path classification."""
 
-# ruff: file-ignore[pytest-unittest-assertion, pytest-unittest-raises-assertion, undocumented-public-method]
+# ruff: file-ignore[pytest-unittest-assertion, pytest-unittest-raises-assertion, suspicious-subprocess-import, subprocess-without-shell-equals-true, undocumented-public-method]
 
 from __future__ import annotations
 
+import shutil
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 from scripts.ci_changed_paths import classify_paths
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
+GIT_EXECUTABLE = shutil.which("git")
+
+
+def _git(
+    repository: Path,
+    *arguments: str,
+    check: bool = True,
+) -> subprocess.CompletedProcess[bytes]:
+    """Run Git against a disposable test repository.
+
+    Returns:
+        The completed Git process.
+
+    Raises:
+        RuntimeError: If Git is unavailable.
+
+    """
+    if GIT_EXECUTABLE is None:
+        raise RuntimeError("Git is required for CI routing contract tests")
+    return subprocess.run(
+        [GIT_EXECUTABLE, *arguments],
+        cwd=repository,
+        check=check,
+        capture_output=True,
+    )
+
+
+def _initialize_repository(repository: Path) -> None:
+    """Create a deterministic disposable Git repository."""
+    repository.mkdir()
+    _git(repository, "init", "--initial-branch=main")
+    _git(repository, "config", "user.name", "CI routing tests")
+    _git(repository, "config", "user.email", "ci-routing@example.invalid")
+    _git(repository, "config", "core.autocrlf", "false")
+
+
+def _commit(repository: Path, message: str) -> str:
+    """Commit every fixture change and return the commit identity.
+
+    Returns:
+        The new commit SHA.
+
+    """
+    _git(repository, "add", "--all")
+    _git(repository, "commit", "--message", message)
+    return _git(repository, "rev-parse", "HEAD").stdout.decode().strip()
+
+
+def _classify_git_diff(diff_output: bytes) -> dict[str, str]:
+    """Pass raw NUL-delimited Git output through the real classifier CLI.
+
+    Returns:
+        The classifier's GitHub-style outputs.
+
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPOSITORY_ROOT / "scripts" / "ci_changed_paths.py"),
+        ],
+        input=diff_output,
+        check=True,
+        capture_output=True,
+    )
+    return dict(
+        line.split("=", maxsplit=1) for line in result.stdout.decode().splitlines()
+    )
 
 
 class ChangedPathClassificationTests(unittest.TestCase):
@@ -112,6 +183,117 @@ class ChangedPathClassificationTests(unittest.TestCase):
         self.assertEqual("false", outputs["run_functional_tests"])
 
 
+class GitDiffRoutingIntegrationTests(unittest.TestCase):
+    """Exercise Git history and rename output through the classifier CLI."""
+
+    def test_docs_only_diff_requires_base_history_in_lint_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "source"
+            _initialize_repository(source)
+            (source / "README.md").write_text("base\n", encoding="utf-8")
+            base_sha = _commit(source, "docs: add base readme")
+            _git(source, "switch", "--create", "feature")
+            (source / "README.md").write_text("head\n", encoding="utf-8")
+            head_sha = _commit(source, "docs: update readme")
+
+            checkout = root / "checkout"
+            _git(
+                root,
+                "clone",
+                "--depth",
+                "1",
+                "--branch",
+                "feature",
+                source.as_uri(),
+                str(checkout),
+            )
+            shallow_diff = _git(
+                checkout,
+                "diff",
+                "--name-only",
+                "-z",
+                "--diff-filter=ACMRTD",
+                base_sha,
+                head_sha,
+                check=False,
+            )
+            self.assertNotEqual(0, shallow_diff.returncode)
+
+            _git(checkout, "fetch", "--unshallow", "origin")
+            complete_diff = _git(
+                checkout,
+                "diff",
+                "--name-only",
+                "-z",
+                "--diff-filter=ACMRTD",
+                base_sha,
+                head_sha,
+            )
+            self.assertEqual(b"README.md\0", complete_diff.stdout)
+            self.assertEqual(
+                "true",
+                _classify_git_diff(complete_diff.stdout)["docs_only"],
+            )
+
+    def test_source_rename_into_docs_keeps_broad_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository = Path(temporary_directory) / "repository"
+            _initialize_repository(repository)
+            source = repository / "custom_components" / "midea_ac_lan"
+            source.mkdir(parents=True)
+            old_path = source / "routing_example.py"
+            old_path.write_text("ROUTING_EXAMPLE = True\n", encoding="utf-8")
+            base_sha = _commit(repository, "test: add integration source")
+
+            destination = repository / "doc" / "routing_example.md"
+            destination.parent.mkdir()
+            _git(
+                repository,
+                "mv",
+                old_path.relative_to(repository).as_posix(),
+                destination.relative_to(repository).as_posix(),
+            )
+            head_sha = _commit(repository, "docs: move source into documentation")
+
+            default_diff = _git(
+                repository,
+                "diff",
+                "--name-only",
+                "-z",
+                "--diff-filter=ACMRTD",
+                base_sha,
+                head_sha,
+            )
+            self.assertEqual(b"doc/routing_example.md\0", default_diff.stdout)
+            self.assertEqual(
+                "true",
+                _classify_git_diff(default_diff.stdout)["docs_only"],
+            )
+
+            safe_diff = _git(
+                repository,
+                "diff",
+                "--no-renames",
+                "--name-only",
+                "-z",
+                "--diff-filter=ACMRTD",
+                base_sha,
+                head_sha,
+            )
+            self.assertEqual(
+                {
+                    "custom_components/midea_ac_lan/routing_example.py",
+                    "doc/routing_example.md",
+                },
+                set(safe_diff.stdout.decode().strip("\0").split("\0")),
+            )
+            outputs = _classify_git_diff(safe_diff.stdout)
+            self.assertEqual("false", outputs["docs_only"])
+            self.assertEqual("true", outputs["run_functional_tests"])
+            self.assertEqual("true", outputs["run_ha_validation"])
+
+
 class WorkflowRoutingBindingTests(unittest.TestCase):
     """Verify that workflows consume the classifier's routing outputs."""
 
@@ -125,6 +307,7 @@ class WorkflowRoutingBindingTests(unittest.TestCase):
 
         self.assertIn("runs-on: ubuntu-latest", lint_block)
         self.assertNotIn("matrix:", lint_block)
+        self.assertIn("fetch-depth: 0", lint_block)
         self.assertIn("--from-ref", lint_block)
         self.assertIn(
             "if: needs.changes.outputs.run_functional_tests == 'true'",
@@ -148,6 +331,14 @@ class WorkflowRoutingBindingTests(unittest.TestCase):
             "if: needs.changes.outputs.run_ha_validation == 'true'",
             workflow,
         )
+
+    def test_workflows_disable_rename_detection_for_path_classification(self) -> None:
+        for workflow_name in ("linter.yml", "validate.yml"):
+            workflow = (
+                REPOSITORY_ROOT / ".github" / "workflows" / workflow_name
+            ).read_text(encoding="utf-8")
+
+            self.assertIn("git diff --no-renames --name-only", workflow)
 
 
 if __name__ == "__main__":
