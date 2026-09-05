@@ -1,5 +1,5 @@
 ---
-name: Lint
+name: Lint and Test
 
 on: # yamllint disable-line rule:truthy
   # push: null
@@ -8,14 +8,34 @@ on: # yamllint disable-line rule:truthy
 permissions: {}
 
 jobs:
-  build:
+  changes:
+    name: Classify changed paths
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+      run_functional_tests: ${{ steps.scope.outputs.run_functional_tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify validation scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          git diff --name-only -z --diff-filter=ACMRTD
+          "$BASE_SHA" "$HEAD_SHA" |
+          python3 scripts/ci_changed_paths.py --github-output "$GITHUB_OUTPUT"
+
+  lint:
     name: Lint
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # python-version: ["3.12", "3.13", "3.14"]
-        python-version: ["3.12"]
-        os: ["windows-latest", "ubuntu-latest", "macos-latest"]
+    needs: changes
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -32,19 +52,63 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
 
       - name: Install dependencies
         # --locked fails the build if uv.lock is out of date with pyproject.toml
-        run: uv sync --locked --python ${{ matrix.python-version }}
+        run: uv sync --locked --python 3.12
 
       - name: Cache pre-commit
         uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: >-
-            pre-commit-${{ runner.os }}-py${{ matrix.python-version }}-${{
+            pre-commit-${{ runner.os }}-py3.12-${{
             hashFiles('.pre-commit-config.yaml') }}
 
       - name: Pre-commit
-        run: uv run pre-commit run --all-files --show-diff-on-failure
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          DOCS_ONLY: ${{ needs.changes.outputs.docs_only }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$DOCS_ONLY" = "true" ]; then
+            uv run pre-commit run \
+              --from-ref "$BASE_SHA" \
+              --to-ref "$HEAD_SHA" \
+              --show-diff-on-failure
+          else
+            uv run pre-commit run --all-files --show-diff-on-failure
+          fi
+
+  tests:
+    name: Functional tests (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.run_functional_tests == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-latest", "ubuntu-latest", "macos-latest"]
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --locked --python 3.12
+
+      - name: Run functional tests
+        run: >-
+          uv run python -m unittest discover
+          -s tests -p "test_*.py" -v
