@@ -28,7 +28,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: >-
-          git diff --name-only -z --diff-filter=ACMRTD
+          git diff --no-renames --name-only -z --diff-filter=ACMRTD
           "$BASE_SHA" "$HEAD_SHA" |
           python3 scripts/ci_changed_paths.py --github-output "$GITHUB_OUTPUT"
 
@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         # Pin to a full release; Astral no longer publishes moving major tags.

@@ -26,7 +26,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: >-
-          git diff --name-only -z --diff-filter=ACMRTD
+          git diff --no-renames --name-only -z --diff-filter=ACMRTD
           "$BASE_SHA" "$HEAD_SHA" |
           python3 scripts/ci_changed_paths.py --github-output "$GITHUB_OUTPUT"
 
